@@ -97,6 +97,10 @@
         <span class="habit-dot overview-nav-dot">▦</span>
         <span class="habit-row-name">Visão geral</span>
       </button>
+      <button id="btn-tasks" type="button" class="habit-row overview-nav-row">
+        <span class="habit-dot overview-nav-dot">☑</span>
+        <span class="habit-row-name">Tarefas</span>
+      </button>
 
       <div class="sidebar-group">
         <h2 class="sidebar-label">Construir</h2>
@@ -105,6 +109,12 @@
       <div class="sidebar-group">
         <h2 class="sidebar-label">Abandonar</h2>
         <ul id="list-quit" class="habit-list"></ul>
+      </div>
+      <div id="archived-group" class="sidebar-group is-hidden">
+        <button id="archived-toggle" type="button" class="sidebar-label archived-toggle">
+          <span class="archived-toggle-caret">▸</span> Arquivados <span id="archived-count"></span>
+        </button>
+        <ul id="list-archived" class="habit-list is-hidden"></ul>
       </div>
       <p id="empty-habits" class="empty-hint is-hidden">Nenhum hábito ainda.<br>Toque em <strong>+ Hábito</strong> para começar seu caderno.</p>
     </aside>
@@ -155,13 +165,33 @@
 
         <nav class="view-tabs">
           <button class="view-tab is-active" data-oview="week">Semana</button>
-          <button class="view-tab" data-oview="month">4 semanas</button>
+          <button class="view-tab" data-oview="month">Mensal</button>
           <button class="view-tab" data-oview="semester">Semestral</button>
         </nav>
 
         <div id="overview-week" class="view-body"></div>
         <div id="overview-month" class="view-body is-hidden"></div>
         <div id="overview-semester" class="view-body is-hidden"></div>
+      </div>
+
+      <div id="panel-tasks" class="panel-habit is-hidden">
+        <div class="habit-header">
+          <div class="habit-title-row">
+            <span class="habit-icon overview-nav-dot" style="font-size:18px">☑</span>
+            <div>
+              <h2>Tarefas</h2>
+              <p class="habit-meta">Uma lista simples, com espaço para sub-itens</p>
+            </div>
+          </div>
+        </div>
+
+        <form id="task-form" class="task-add-form">
+          <input type="text" id="task-input" placeholder="Nova tarefa… (ex.: Mercado, Ligar pro dentista)" required>
+          <button type="submit" class="btn btn-primary btn-sm">Adicionar</button>
+        </form>
+
+        <div id="tasks-list" class="tasks-list"></div>
+        <p id="tasks-empty" class="empty-hint is-hidden">Nenhuma tarefa por aqui. Adicione uma acima.</p>
       </div>
     </main>
   </div>
@@ -210,7 +240,10 @@
       </label>
 
       <div class="modal-actions">
-        <button type="button" id="btn-delete-habit" class="btn btn-danger is-hidden">Excluir</button>
+        <div class="modal-actions-left">
+          <button type="button" id="btn-archive-habit" class="btn btn-ghost btn-sm is-hidden">Arquivar</button>
+          <button type="button" id="btn-delete-habit" class="btn btn-danger is-hidden">Excluir</button>
+        </div>
         <div class="modal-actions-right">
           <button type="button" id="btn-cancel-habit" class="btn btn-ghost">Cancelar</button>
           <button type="submit" class="btn btn-primary">Salvar</button>
@@ -275,6 +308,7 @@
 <script type="module" src="js/calendar.js"></script>
 <script type="module" src="js/panel-router.js"></script>
 <script type="module" src="js/overview.js"></script>
+<script type="module" src="js/tasks.js"></script>
 <script type="module" src="js/habits.js"></script>
 <script type="module" src="js/backup.js"></script>
 <script type="module" src="js/pdfexport.js"></script>

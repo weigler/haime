@@ -1,9 +1,11 @@
 import { watchAuth, logout } from "./auth.js";
 import { initHabits, teardownHabits } from "./habits.js";
-import { initOverviewUid } from "./overview.js";
+import { initOverviewUid, teardownOverview } from "./overview.js";
+import { initTasksUid, teardownTasks } from "./tasks.js";
 import { initDataTools, teardownDataTools } from "./data-tools.js";
 import { runAutoBackupIfDue } from "./backup.js";
 import { showToast } from "./toast.js";
+import { showPanel, setActiveNav } from "./panel-router.js";
 
 const authScreen = document.getElementById("auth-screen");
 const appScreen = document.getElementById("app-screen");
@@ -19,6 +21,7 @@ watchAuth(
     userMenuBtn.title = user.displayName || user.email || "";
     initHabits(user.uid);
     initOverviewUid(user.uid);
+    initTasksUid(user.uid);
     initDataTools(user.uid);
 
     // backup automático (no máximo 1x por dia), silencioso em segundo plano
@@ -30,7 +33,11 @@ watchAuth(
     authScreen.classList.remove("is-hidden");
     appScreen.classList.add("is-hidden");
     teardownHabits();
+    teardownOverview();
+    teardownTasks();
     teardownDataTools();
+    showPanel("empty");
+    setActiveNav(null);
   }
 );
 

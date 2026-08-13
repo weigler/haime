@@ -9,6 +9,7 @@ import {
   onAuthStateChanged
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAllowlist } from "./db.js";
 
 const googleProvider = new GoogleAuthProvider();
 
@@ -72,7 +73,8 @@ document.getElementById("signin-form").addEventListener("submit", async (e) => {
   const email = document.getElementById("signin-email").value.trim();
   const password = document.getElementById("signin-password").value;
   try{
-    await signInWithEmailAndPassword(auth, email, password);
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+    if(!(await checkAllowed(cred.user))) return;
   }catch(err){ showAuthError(err); }
 });
 
@@ -85,6 +87,7 @@ document.getElementById("signup-form").addEventListener("submit", async (e) => {
   const password = document.getElementById("signup-password").value;
   try{
     const cred = await createUserWithEmailAndPassword(auth, email, password);
+    if(!(await checkAllowed(cred.user))) return;
     await updateProfile(cred.user, { displayName: name });
     await ensureUserDoc(cred.user);
   }catch(err){ showAuthError(err); }
@@ -95,9 +98,32 @@ document.getElementById("google-signin").addEventListener("click", async () => {
   authError.textContent = "";
   try{
     const cred = await signInWithPopup(auth, googleProvider);
+    if(!(await checkAllowed(cred.user))) return;
     await ensureUserDoc(cred.user);
   }catch(err){ showAuthError(err); }
 });
+
+// confere a lista de autorização (config/allowlist). Se o documento
+// não existir, o acesso fica livre (recurso desligado por padrão).
+// Se existir e o e-mail não estiver nela, desloga e avisa.
+async function checkAllowed(user){
+  let list;
+  try{
+    list = await getAllowlist();
+  }catch(err){
+    console.error("[Haimë auth] Falha ao ler a allowlist:", err);
+    return true; // não bloqueia o acesso por causa de um erro de leitura
+  }
+  if(list === null) return true;
+  const email = (user.email || "").toLowerCase().trim();
+  if(list.includes(email)) return true;
+
+  await signOut(auth);
+  authError.innerHTML =
+    `Este e-mail (${email}) ainda não foi autorizado a usar o Haimë. ` +
+    `Peça para quem administra o app adicionar seu e-mail na lista de acesso.`;
+  return false;
+}
 
 async function ensureUserDoc(user){
   try{

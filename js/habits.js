@@ -1,13 +1,14 @@
 import { createHabit, updateHabit, deleteHabit, watchHabits, watchLogs, setLog } from "./db.js";
 import { renderWeek, renderMonth, renderHeatmap, computeStreak, todayKey } from "./calendar.js";
-import { showPanel, setActiveNav } from "./panel-router.js";
-import { teardownOverview } from "./overview.js";
+import { showPanel, setActiveNav, registerTeardown, teardownOthers } from "./panel-router.js";
 
-const ICONS = ["✅","💧","📖","🏃","🧘","💤","🙏","🥗","🚭","🍺","📵","💸","🧹","✍️","🎯","☕","🍬","🚬","🧠","🎸","🌱","🩺","🛏️","📵"];
+const ICONS = ["✅","💧","🏃","🚶","🧘","🚴","🏋️","⛰️","🏕️","🚿","🛏️","😴","🦷","🧴","💊","🩺","📖","📚","🎓","✏️","🖊️","📝","🙏","📿","🧠","🎯","💡","🚭","🚬","🍺","🍷","🍬","🍭","🍫","🎰","📵","📱","🎮","📺","🍿","🧹","🧺","💸","💰","📅","⏰","🧾","🛒","🎨","📷","🎬","🎧","🎸","🎹","♟️","🧩","🌱","🌳","☀️","🌙","🐕","🐈","🚲","🥗","🍎","🥦","☕","🍵","🥤","🍕"];
 const COLORS = ["#4FA99A","#D2A84C","#C1573F","#6E9CD2","#9B7CD9","#5CB876","#D97D9C","#7A8790"];
 
 let uid = null;
-let habits = [];
+let allHabits = [];
+let habits = [];       // ativos (não arquivados)
+let archived = [];     // arquivados
 let habitsUnsub = null;
 let selectedId = null;
 let logsUnsub = null;
@@ -15,81 +16,109 @@ let currentLogs = {};
 let currentView = "week";
 let refDate = new Date();
 let editingId = null;
+let editingArchived = false;
+let archivedExpanded = false;
 
 const listBuild = document.getElementById("list-build");
 const listQuit = document.getElementById("list-quit");
+const listArchived = document.getElementById("list-archived");
+const archivedGroup = document.getElementById("archived-group");
+const archivedToggle = document.getElementById("archived-toggle");
+const archivedCount = document.getElementById("archived-count");
 const emptyHabits = document.getElementById("empty-habits");
-const btnOverview = document.getElementById("btn-overview");
-const panelOverviewEl = document.getElementById("panel-overview");
 
 export function initHabits(userId){
   uid = userId;
+  showPanel("empty");
   if(habitsUnsub) habitsUnsub();
   habitsUnsub = watchHabits(uid, (list) => {
-    habits = list.filter(h => !h.archived);
+    allHabits = list;
+    habits = allHabits.filter(h => !h.archived);
+    archived = allHabits.filter(h => h.archived);
     renderList();
-    if(selectedId && !habits.find(h => h.id === selectedId)){
+    if(selectedId && !allHabits.find(h => h.id === selectedId)){
       selectedId = null;
     }
     if(selectedId){ renderSelected(); }
-    else if(panelOverviewEl.classList.contains("is-hidden")){ showEmptyPanel(); }
   });
 }
 
 export function teardownHabits(){
   if(habitsUnsub) habitsUnsub();
   if(logsUnsub) logsUnsub();
-  teardownOverview();
-  habits = []; selectedId = null; currentLogs = {};
-  listBuild.innerHTML = ""; listQuit.innerHTML = "";
+  allHabits = []; habits = []; archived = []; selectedId = null; currentLogs = {};
+  listBuild.innerHTML = ""; listQuit.innerHTML = ""; listArchived.innerHTML = "";
+  document.getElementById("view-week").innerHTML = "";
+  document.getElementById("view-month").innerHTML = "";
+  document.getElementById("view-heatmap").innerHTML = "";
 }
 
-// chamado pela aba "Visão geral" para tirar o foco de um hábito específico
-export function deselectHabit(){
+registerTeardown("habit", () => {
   selectedId = null;
   if(logsUnsub){ logsUnsub(); logsUnsub = null; }
   renderList();
-}
+});
 
 function renderList(){
   listBuild.innerHTML = "";
   listQuit.innerHTML = "";
+  listArchived.innerHTML = "";
   const build = habits.filter(h => h.goal !== "quit");
   const quit = habits.filter(h => h.goal === "quit");
 
   build.forEach(h => listBuild.appendChild(habitRow(h)));
   quit.forEach(h => listQuit.appendChild(habitRow(h)));
+  archived.forEach(h => listArchived.appendChild(habitRow(h, true)));
 
-  document.querySelectorAll(".sidebar-group").forEach(g => {
+  document.querySelectorAll(".sidebar-group:not(#archived-group)").forEach(g => {
     const list = g.querySelector(".habit-list");
     g.classList.toggle("is-hidden", list.children.length === 0);
   });
-  emptyHabits.classList.toggle("is-hidden", habits.length > 0);
+  emptyHabits.classList.toggle("is-hidden", habits.length > 0 || archived.length > 0);
+
+  archivedGroup.classList.toggle("is-hidden", archived.length === 0);
+  archivedCount.textContent = `(${archived.length})`;
+  listArchived.classList.toggle("is-hidden", !archivedExpanded);
+  archivedToggle.classList.toggle("is-expanded", archivedExpanded);
 }
 
-function habitRow(h){
+archivedToggle.addEventListener("click", () => {
+  archivedExpanded = !archivedExpanded;
+  listArchived.classList.toggle("is-hidden", !archivedExpanded);
+  archivedToggle.classList.toggle("is-expanded", archivedExpanded);
+});
+
+function habitRow(h, isArchived){
   const li = document.createElement("li");
   const row = document.createElement("button");
   row.type = "button";
   row.dataset.id = h.id;
-  row.className = "habit-row" + (h.id === selectedId ? " is-active" : "");
+  row.className = "habit-row" + (h.id === selectedId ? " is-active" : "") + (isArchived ? " is-archived" : "");
   row.innerHTML = `
     <span class="habit-dot" style="background:${h.color}33;color:${h.color}">${h.icon}</span>
     <span class="habit-row-name">${escapeHtml(h.name)}</span>
-    <span class="habit-row-streak"></span>
+    ${isArchived
+      ? `<span class="icon-btn icon-btn-tiny" data-unarchive title="Desarquivar">↺</span>`
+      : `<span class="habit-row-streak"></span>`}
   `;
-  row.addEventListener("click", () => selectHabit(h.id));
+  row.addEventListener("click", (e) => {
+    if(e.target.closest("[data-unarchive]")){
+      e.stopPropagation();
+      updateHabit(uid, h.id, { archived: false });
+      return;
+    }
+    selectHabit(h.id);
+  });
   li.appendChild(row);
   return li;
 }
 
 function selectHabit(id){
+  teardownOthers("habit");
   selectedId = id;
   refDate = new Date();
   currentView = "week";
   document.querySelectorAll(".view-tab[data-view]").forEach(t => t.classList.toggle("is-active", t.dataset.view === "week"));
-  teardownOverview();
-  btnOverview.classList.remove("is-active");
   renderList();
   renderSelected();
 }
@@ -99,7 +128,7 @@ function showEmptyPanel(){
 }
 
 function renderSelected(){
-  const habit = habits.find(h => h.id === selectedId);
+  const habit = allHabits.find(h => h.id === selectedId);
   if(!habit){ showEmptyPanel(); return; }
 
   showPanel("habit");
@@ -111,7 +140,8 @@ function renderSelected(){
   document.getElementById("habit-name").textContent = habit.name;
   document.getElementById("habit-meta").textContent =
     (habit.goal === "quit" ? "Abandonar" : "Construir") + " · " +
-    (habit.type === "count" ? (habit.target ? `meta de ${habit.target}/dia` : "várias vezes ao dia") : "marcação diária");
+    (habit.type === "count" ? (habit.target ? `meta de ${habit.target}/dia` : "várias vezes ao dia") : "marcação diária") +
+    (habit.archived ? " · arquivado" : "");
 
   if(logsUnsub) logsUnsub();
   logsUnsub = watchLogs(uid, habit.id, (logs) => {
@@ -173,7 +203,7 @@ document.querySelectorAll(".view-tab[data-view]").forEach(tab => {
     currentView = tab.dataset.view;
     document.querySelectorAll(".view-tab[data-view]").forEach(t => t.classList.remove("is-active"));
     tab.classList.add("is-active");
-    const habit = habits.find(h => h.id === selectedId);
+    const habit = allHabits.find(h => h.id === selectedId);
     if(habit) renderView(habit);
   });
 });
@@ -228,6 +258,7 @@ modal.addEventListener("click", (e) => { if(e.target === modal) closeModal(); })
 
 function openModal(habit){
   editingId = habit?.id || null;
+  editingArchived = habit?.archived || false;
   document.getElementById("modal-title").textContent = habit ? "Editar hábito" : "Novo hábito";
   document.getElementById("field-name").value = habit?.name || "";
   fieldIcon.value = habit?.icon || ICONS[0];
@@ -241,6 +272,9 @@ function openModal(habit){
   colorPicker.querySelectorAll(".color-opt").forEach(b => b.classList.toggle("is-selected", b.dataset.color === selectedColor));
 
   document.getElementById("btn-delete-habit").classList.toggle("is-hidden", !habit);
+  const archiveBtn = document.getElementById("btn-archive-habit");
+  archiveBtn.classList.toggle("is-hidden", !habit);
+  archiveBtn.textContent = editingArchived ? "Desarquivar" : "Arquivar";
   modal.classList.remove("is-hidden");
 }
 
@@ -276,6 +310,12 @@ document.getElementById("btn-delete-habit").addEventListener("click", async () =
   if(!confirm("Excluir este hábito e todo o histórico dele? Essa ação não pode ser desfeita.")) return;
   await deleteHabit(uid, editingId);
   if(selectedId === editingId) selectedId = null;
+  closeModal();
+});
+
+document.getElementById("btn-archive-habit").addEventListener("click", async () => {
+  if(!editingId) return;
+  await updateHabit(uid, editingId, { archived: !editingArchived });
   closeModal();
 });
 

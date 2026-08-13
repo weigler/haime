@@ -16,6 +16,18 @@ GitHub Pages.
   (várias vezes por dia, com meta diária opcional).
 - Três visões: **Semana**, **Mês** e **Heatmap de 6 meses** (estilo
   "contribuições", semanas × dias da semana).
+- **Arquivar hábitos**: no menu de editar um hábito (ícone ✎), o
+  botão "Arquivar" tira o hábito das listas principais sem apagar o
+  histórico. Hábitos arquivados ficam numa seção recolhível
+  "Arquivados" no fim da barra lateral, com um botão "↺" para
+  desarquivar a qualquer momento.
+- **Tarefas**: uma aba simples de lista de afazeres, abaixo de
+  "Visão geral". Cada tarefa pode ficar sozinha (um check) ou virar
+  um mini-checklist com sub-itens (ex.: uma tarefa "Mercado" com
+  "leite", "pão", "ovos" dentro, cada um com seu próprio check).
+- Mais de 70 ícones para escolher ao criar um hábito, agrupando
+  saúde, leitura, filmes/séries, caminhada/exercício, casa,
+  hobbies, natureza e mais.
 - **Visão geral**: uma aba separada (acima da lista de hábitos)
   mostrando **todos os hábitos juntos**, lado a lado, em três
   formatos: **Semana**, **4 semanas** e **Semestral** (26 semanas
@@ -69,7 +81,57 @@ GitHub Pages.
 3. Em alguns minutos o app estará em
    `https://SEU-USUARIO.github.io/habit-tracker/`.
 
-## 3. Ícones do PWA (opcional)
+## 3. Controlar quem pode criar conta (allowlist)
+
+Por padrão, "Criar conta" e "Continuar com Google" ficam abertos
+para qualquer pessoa que tenha o link do app — não existe aprovação
+manual embutida no Firebase Auth para isso. O Haimë já vem com um
+sistema simples de lista de autorização, mas ele só passa a valer
+quando você o configura:
+
+1. No Firebase Console, vá em **Firestore Database → Dados**.
+2. Crie uma coleção chamada `config`.
+3. Dentro dela, crie um documento com o ID exatamente `allowlist`.
+4. Nesse documento, adicione um campo `emails` do tipo **array**,
+   e coloque os e-mails autorizados (minúsculo, ex.:
+   `["voce@gmail.com", "outrapessoa@gmail.com"]`).
+5. Salve.
+
+A partir daí, toda tentativa de cadastro ou login (e-mail/senha ou
+Google) com um e-mail fora dessa lista é barrada automaticamente:
+a conta chega a ser criada no Firebase Auth, mas o app desloga na
+hora e mostra o aviso "este e-mail ainda não foi autorizado".
+**Enquanto o documento `config/allowlist` não existir, o acesso
+fica livre** — é assim que o app funciona hoje, então crie esse
+documento assim que quiser fechar o cadastro.
+
+Para adicionar alguém depois, é só abrir o documento no console e
+acrescentar o e-mail no array `emails`.
+
+### O Firebase avisa a pessoa por e-mail quando ela é autorizada?
+
+Não automaticamente — a lista de autorização é só uma checagem no
+seu código, o Firebase não sabe que ela existe, então não dispara
+e-mail nenhum sozinho. Duas formas de resolver isso:
+
+- **Mais simples (sem custo, sem configurar nada extra):** crie a
+  conta da pessoa você mesmo, direto no Firebase Console
+  (**Authentication → Users → Add user**, com um e-mail e uma senha
+  provisória), adicione o e-mail dela na allowlist, e avise por
+  fora (WhatsApp, etc.) que a conta já existe. Ou, se preferir que
+  o próprio Firebase mande um e-mail, use a opção **"Reset
+  password"** ao lado do usuário criado — o Firebase envia um
+  e-mail de verdade com um link para a pessoa definir a própria
+  senha, que funciona como um "convite" automático.
+- **Mais elaborado (exige o plano Blaze e um provedor de e-mail
+  próprio, tipo SendGrid):** instalar a extensão oficial "Trigger
+  Email" do Firebase, que observa uma coleção do Firestore e manda
+  um e-mail customizado sempre que um documento novo é criado —
+  daria pra disparar automaticamente ao adicionar alguém na
+  allowlist. É mais trabalho de configuração pra um app pessoal
+  como este, mas existe se um dia fizer sentido.
+
+## 4. Ícones do PWA (opcional)
 
 O `manifest.json` espera dois arquivos em `icons/`:
 `icon-192.png` (192×192) e `icon-512.png` (512×512). Eles já vêm
@@ -145,6 +207,16 @@ users/{uid}/backups/{backupId}
   habits       objeto com uma "foto" de cada hábito + seus logs
   (backupId é "auto-latest" para o backup automático diário, ou
   "manual-<data>" para cada backup manual)
+
+users/{uid}/tasks/{taskId}
+  title       string
+  done        bool     (usado só quando a tarefa NÃO tem sub-itens)
+  items       array de { id, text, done }  (sub-itens, ex.: mercado)
+  createdAt   timestamp
+
+config/allowlist
+  emails      array de strings (e-mails autorizados, minúsculo)
+  (documento único, editado manualmente pelo console — ver seção 3)
 ```
 
 Um dia "não marcado" simplesmente não tem documento em `logs` — é
@@ -163,6 +235,7 @@ js/toast.js             notificação flutuante curta (usada por backup/PDF)
 js/settings.js          tema (claro/escuro) e paleta de cor de fundo
 js/panel-router.js      controla qual painel principal está visível
 js/overview.js          aba "Visão geral" (todos os hábitos juntos)
+js/tasks.js             aba "Tarefas" (to-do list com sub-itens)
 js/calendar.js          cálculo de datas, streak e renderização das 3 visões
 js/habits.js            lista de hábitos, modal de criar/editar, seleção
 js/backup.js            backup automático (24h) e manual no Firestore

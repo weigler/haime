@@ -17,6 +17,9 @@ function habitsCol(uid){
 function logsCol(uid, habitId){
   return collection(db, "users", uid, "habits", habitId, "logs");
 }
+function tasksCol(uid){
+  return collection(db, "users", uid, "tasks");
+}
 
 export function watchHabits(uid, callback){
   const q = query(habitsCol(uid), orderBy("createdAt", "asc"));
@@ -96,4 +99,45 @@ export async function updateUserDoc(uid, data){
   await setDoc(doc(db, "users", uid), data, { merge: true });
 }
 
+// ------------------------------------------------------------
+// Lista de autorização (allowlist) para controlar quem pode
+// criar conta / entrar. Documento único em config/allowlist,
+// editado manualmente pelo console do Firebase — ver README.
+// Se o documento não existir, o app trata como "sem restrição".
+// ------------------------------------------------------------
+export async function getAllowlist(){
+  const snap = await getDoc(doc(db, "config", "allowlist"));
+  if(!snap.exists()) return null;
+  return (snap.data().emails || []).map(e => String(e).toLowerCase().trim());
+}
+
 export { serverTimestamp };
+
+// ------------------------------------------------------------
+// Tarefas (To-Do), com sub-itens opcionais (ex.: lista de mercado)
+// ------------------------------------------------------------
+export function watchTasks(uid, callback){
+  const q = query(tasksCol(uid), orderBy("createdAt", "asc"));
+  return onSnapshot(q, (snap) => {
+    const tasks = [];
+    snap.forEach(d => tasks.push({ id: d.id, ...d.data() }));
+    callback(tasks);
+  });
+}
+
+export async function createTask(uid, title){
+  return addDoc(tasksCol(uid), {
+    title,
+    done: false,
+    items: [],
+    createdAt: serverTimestamp()
+  });
+}
+
+export async function updateTask(uid, taskId, data){
+  return updateDoc(doc(db, "users", uid, "tasks", taskId), data);
+}
+
+export async function deleteTask(uid, taskId){
+  return deleteDoc(doc(db, "users", uid, "tasks", taskId));
+}
