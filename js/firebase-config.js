@@ -5,7 +5,7 @@
 // 2. Adicione um "app da Web" (ícone </>) e copie o objeto de
 //    configuração que ele te der, colando aqui embaixo.
 // 3. Em Build → Authentication → Sign-in method, ative
-//    "E-mail/senha" e "Google".
+//    "E-mail/senha".
 // 4. Em Build → Firestore Database, crie o banco (modo produção)
 //    e depois publique as regras do arquivo firestore.rules
 //    (Firestore → Regras → cole o conteúdo → Publicar).

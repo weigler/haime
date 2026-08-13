@@ -299,6 +299,7 @@ form.addEventListener("submit", async (e) => {
   if(editingId){
     await updateHabit(uid, editingId, data);
   } else {
+    teardownOthers("habit");
     const ref = await createHabit(uid, data);
     selectedId = ref.id;
   }
@@ -309,7 +310,10 @@ document.getElementById("btn-delete-habit").addEventListener("click", async () =
   if(!editingId) return;
   if(!confirm("Excluir este hábito e todo o histórico dele? Essa ação não pode ser desfeita.")) return;
   await deleteHabit(uid, editingId);
-  if(selectedId === editingId) selectedId = null;
+  if(selectedId === editingId){
+    selectedId = null;
+    showEmptyPanel();
+  }
   closeModal();
 });
 

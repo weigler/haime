@@ -1,7 +1,8 @@
-import { watchAuth, logout } from "./auth.js";
+import { watchAuth, logout, checkAllowed } from "./auth.js";
 import { initHabits, teardownHabits } from "./habits.js";
 import { initOverviewUid, teardownOverview } from "./overview.js";
 import { initTasksUid, teardownTasks } from "./tasks.js";
+import { initTodayUid, teardownToday, enterToday } from "./today.js";
 import { initDataTools, teardownDataTools } from "./data-tools.js";
 import { runAutoBackupIfDue } from "./backup.js";
 import { showToast } from "./toast.js";
@@ -13,7 +14,14 @@ const userInitial = document.getElementById("user-initial");
 const userMenuBtn = document.getElementById("btn-user-menu");
 
 watchAuth(
-  (user) => {
+  async (user) => {
+    // checa a lista de autorização em TODA mudança de estado de login —
+    // inclusive quando a página recarrega com uma sessão já aberta —
+    // não só no momento do cadastro/login. Se não for permitido,
+    // checkAllowed já desloga e mostra o aviso; não avançamos daqui.
+    const allowed = await checkAllowed(user);
+    if(!allowed) return;
+
     authScreen.classList.add("is-hidden");
     appScreen.classList.remove("is-hidden");
     const label = (user.displayName || user.email || "?").trim();
@@ -22,7 +30,9 @@ watchAuth(
     initHabits(user.uid);
     initOverviewUid(user.uid);
     initTasksUid(user.uid);
+    initTodayUid(user.uid);
     initDataTools(user.uid);
+    enterToday(); // tela inicial, como no app de referência
 
     // backup automático (no máximo 1x por dia), silencioso em segundo plano
     runAutoBackupIfDue(user.uid)
@@ -35,6 +45,7 @@ watchAuth(
     teardownHabits();
     teardownOverview();
     teardownTasks();
+    teardownToday();
     teardownDataTools();
     showPanel("empty");
     setActiveNav(null);

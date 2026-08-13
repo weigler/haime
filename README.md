@@ -2,7 +2,7 @@
 
 *Haimë* (Quenya: "hábito") — caderno pessoal de hábitos (construir ou
 abandonar), com Firebase Firestore como banco de dados por usuário e
-login por e-mail/senha ou Google. Site estático, feito para rodar no
+login por e-mail/senha. Site estático, feito para rodar no
 GitHub Pages.
 
 ## O que ele faz
@@ -14,8 +14,19 @@ GitHub Pages.
   em vez de dias marcados).
 - Dois tipos de marcação: **check diário** (sim/não) ou **contagem**
   (várias vezes por dia, com meta diária opcional).
-- Três visões: **Semana**, **Mês** e **Heatmap de 6 meses** (estilo
-  "contribuições", semanas × dias da semana).
+- Três visões por hábito: **Semana**, **Mês** (matriz rolante das
+  últimas 4 semanas) e **Semestral** (matriz de 24 semanas, um
+  quadradinho por dia — estilo "contribuições").
+- **Hoje**: uma tela inicial estilo painel — círculo com a data,
+  faixa da semana (toque num dia pra ver/marcar aquele dia), lista
+  rápida dos hábitos do dia (check, "+", ou distintivo de sequência
+  limpa pra hábitos a abandonar) e das tarefas pendentes. É a
+  primeira tela ao entrar, igual ao app de referência (sem os
+  blocos de "Bonus Quest" e "PRO").
+- **Barra de abas no celular/tablet**: em telas estreitas (até
+  900px), a barra lateral vira uma barra de abas fixa embaixo —
+  Hoje, Hábitos, Tarefas e Mais (que abre Visão geral, Configurações
+  e Sair). No desktop, a navegação continua pela barra lateral.
 - **Arquivar hábitos**: no menu de editar um hábito (ícone ✎), o
   botão "Arquivar" tira o hábito das listas principais sem apagar o
   histórico. Hábitos arquivados ficam numa seção recolhível
@@ -29,9 +40,11 @@ GitHub Pages.
   saúde, leitura, filmes/séries, caminhada/exercício, casa,
   hobbies, natureza e mais.
 - **Visão geral**: uma aba separada (acima da lista de hábitos)
-  mostrando **todos os hábitos juntos**, lado a lado, em três
-  formatos: **Semana**, **4 semanas** e **Semestral** (26 semanas
-  agregadas). Dá pra marcar o dia direto por ali também.
+  mostrando **todos os hábitos juntos**, cada um com seu próprio
+  mini-calendário, em três formatos: **Semana** (tira de 7 dias),
+  **Mensal** (semanas do mês corrente em colunas, 7 dias em linha)
+  e **Semestral** (24 semanas em colunas, 7 dias em linha). Dá pra
+  marcar o dia direto por ali também.
 - **Configurações** (ícone de engrenagem no topo): escolha entre
   tema **claro** ou **escuro**, e 6 opções de **cor de fundo**
   (Ardósia, Marfim, Bruma, Musgo, Ameixa, Carvão). A preferência
@@ -41,8 +54,10 @@ GitHub Pages.
   documento novo no Firestore **e** baixa um `.json` no aparelho).
 - **Exportar em PDF**: gera um relatório visual com nome, sequência
   atual e um mini-heatmap de ~12 semanas de cada hábito.
-- Multiusuário: cada pessoa que criar conta (e-mail/senha ou Google)
-  tem seus próprios hábitos, isolados pelas regras do Firestore.
+- Login só por e-mail/senha, com uma lista de autorização opcional
+  (allowlist) para controlar quem pode criar conta — ver seção 3.
+  Multiusuário: cada conta tem seus próprios hábitos, isolados
+  pelas regras do Firestore.
 - Funciona como PWA (pode "instalar" no celular/computador).
 
 ## 1. Criar o projeto no Firebase
@@ -50,9 +65,8 @@ GitHub Pages.
 1. Acesse [console.firebase.google.com](https://console.firebase.google.com)
    e crie um projeto novo (pode desativar o Google Analytics, não é
    necessário).
-2. Em **Build → Authentication → Sign-in method**, ative:
-   - **E-mail/senha**
-   - **Google**
+2. Em **Build → Authentication → Sign-in method**, ative
+   **E-mail/senha**.
 3. Em **Build → Firestore Database**, clique em **Criar banco de
    dados** (modo produção, escolha a região mais próxima, ex.:
    `southamerica-east1`).
@@ -83,11 +97,11 @@ GitHub Pages.
 
 ## 3. Controlar quem pode criar conta (allowlist)
 
-Por padrão, "Criar conta" e "Continuar com Google" ficam abertos
-para qualquer pessoa que tenha o link do app — não existe aprovação
-manual embutida no Firebase Auth para isso. O Haimë já vem com um
-sistema simples de lista de autorização, mas ele só passa a valer
-quando você o configura:
+Por padrão, "Criar conta" fica aberto para qualquer pessoa que
+tenha o link do app — não existe aprovação manual embutida no
+Firebase Auth para isso. O Haimë já vem com um sistema simples de
+lista de autorização, mas ele só passa a valer quando você o
+configura:
 
 1. No Firebase Console, vá em **Firestore Database → Dados**.
 2. Crie uma coleção chamada `config`.
@@ -97,16 +111,27 @@ quando você o configura:
    `["voce@gmail.com", "outrapessoa@gmail.com"]`).
 5. Salve.
 
-A partir daí, toda tentativa de cadastro ou login (e-mail/senha ou
-Google) com um e-mail fora dessa lista é barrada automaticamente:
-a conta chega a ser criada no Firebase Auth, mas o app desloga na
-hora e mostra o aviso "este e-mail ainda não foi autorizado".
+A partir daí, toda tentativa de cadastro ou login com um e-mail
+fora dessa lista é barrada automaticamente: a conta chega a ser
+criada no Firebase Auth, mas o app desloga na hora e mostra o
+aviso "este e-mail ainda não foi autorizado". Isso vale tanto para
+quem está se cadastrando agora quanto para uma sessão antiga que
+volta a abrir o app depois — a checagem roda em toda entrada, não
+só no clique de "Criar conta".
 **Enquanto o documento `config/allowlist` não existir, o acesso
 fica livre** — é assim que o app funciona hoje, então crie esse
 documento assim que quiser fechar o cadastro.
 
 Para adicionar alguém depois, é só abrir o documento no console e
-acrescentar o e-mail no array `emails`.
+acrescentar o e-mail no array `emails`. Para tirar o acesso de
+alguém, é só remover o e-mail do array — na próxima vez que essa
+pessoa abrir o app (ou recarregar a página), ela é desconectada.
+
+> **Importante:** a allowlist é uma trava no nível do aplicativo,
+> não uma regra do Firestore. Ou seja, ela impede o uso do app,
+> mas não é uma camada extra de segurança dos dados em si — quem
+> já está autenticado só acessa os próprios dados de qualquer
+> forma, graças às regras em `firestore.rules`.
 
 ### O Firebase avisa a pessoa por e-mail quando ela é autorizada?
 
@@ -139,33 +164,30 @@ prontos neste projeto — só troque se quiser um ícone diferente.
 
 ## Solução de problemas: login/cadastro não funciona
 
-Se "Criar conta" ou "Continuar com Google" não fizer nada visível
-ou der erro, siga esta ordem (o app agora mostra o **código do erro**
-embaixo do formulário — ele diz exatamente qual desses itens é):
+Se "Criar conta" não fizer nada visível ou der erro, siga esta
+ordem (o app agora mostra o **código do erro** embaixo do
+formulário — ele diz exatamente qual desses itens é):
 
 1. **Abriu o arquivo direto do computador?** Se a barra de endereço
    mostra `file:///...`, o Firebase Auth não funciona assim — o app
    já mostra um aviso amarelo na tela de login nesse caso. Teste
    pelo link do GitHub Pages, ou sirva localmente
    (`npx serve .` na pasta do projeto e abra `http://localhost:3000`).
-2. **E-mail/senha e Google estão ativados?** Firebase Console →
-   **Authentication → Sign-in method** → confira se os dois
-   provedores aparecem como "Ativado". Se não, é isso — erro
-   `auth/operation-not-allowed` ou `auth/configuration-not-found`.
+2. **E-mail/senha está ativado?** Firebase Console →
+   **Authentication → Sign-in method** → confira se aparece como
+   "Ativado". Se não, é isso — erro `auth/operation-not-allowed`
+   ou `auth/configuration-not-found`.
 3. **O domínio está autorizado?** Firebase Console →
    **Authentication → Settings → Authorized domains** → precisa
    conter `SEU-USUARIO.github.io` (e `localhost`, se for testar
    local). Sem isso o erro é `auth/unauthorized-domain`.
-4. **Pop-up bloqueado?** O botão do Google abre uma janela pop-up;
-   se o navegador bloquear, aparece `auth/popup-blocked` — libere
-   pop-ups para o site e tente de novo.
-5. **Conta criada mas apareceu erro mesmo assim?** Isso costuma
+4. **Conta criada mas apareceu erro mesmo assim?** Isso costuma
    significar que o login funcionou, mas a gravação do perfil no
    Firestore falhou — normalmente porque as regras de
    `firestore.rules` ainda não foram publicadas (passo 4 da seção
    "Criar o projeto no Firebase" acima), ou porque o banco de dados
    do Firestore ainda não foi criado.
-6. Se nada disso resolver, abra o **console do navegador** (F12 →
+5. Se nada disso resolver, abra o **console do navegador** (F12 →
    aba Console) e veja a linha que começa com `[Haimë auth]` — ela
    traz o erro completo do Firebase.
 
@@ -229,13 +251,15 @@ ausência de registro = dia limpo.
 index.html              tela de login + app
 css/style.css           todo o visual
 js/firebase-config.js   suas credenciais do Firebase (edite este arquivo)
-js/auth.js              login/cadastro por e-mail e por Google
+js/auth.js              login/cadastro por e-mail e checagem da allowlist
 js/db.js                leitura/escrita no Firestore
 js/toast.js             notificação flutuante curta (usada por backup/PDF)
 js/settings.js          tema (claro/escuro) e paleta de cor de fundo
 js/panel-router.js      controla qual painel principal está visível
 js/overview.js          aba "Visão geral" (todos os hábitos juntos)
 js/tasks.js             aba "Tarefas" (to-do list com sub-itens)
+js/today.js             aba "Hoje" (painel do dia: hábitos + tarefas)
+js/mobile-nav.js        barra de abas fixa e menu "Mais" (celular/tablet)
 js/calendar.js          cálculo de datas, streak e renderização das 3 visões
 js/habits.js            lista de hábitos, modal de criar/editar, seleção
 js/backup.js            backup automático (24h) e manual no Firestore

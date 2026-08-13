@@ -14,6 +14,7 @@ const panels = {
   habit: document.getElementById("panel-habit"),
   overview: document.getElementById("panel-overview"),
   tasks: document.getElementById("panel-tasks"),
+  today: document.getElementById("panel-today"),
 };
 
 const teardowns = {};

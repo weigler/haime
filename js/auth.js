@@ -2,8 +2,6 @@ import { auth, db } from "./firebase-config.js";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  signInWithPopup,
-  GoogleAuthProvider,
   signOut,
   updateProfile,
   onAuthStateChanged
@@ -11,16 +9,12 @@ import {
 import { doc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAllowlist } from "./db.js";
 
-const googleProvider = new GoogleAuthProvider();
-
 const authError = document.getElementById("auth-error");
 
 // ------------------------------------------------------------
-// Aviso automático para os dois problemas mais comuns ao testar:
-// 1) abrir o index.html direto do disco (file://) em vez de
-//    servir por http(s) — o Firebase Auth não funciona assim.
-// 2) o domínio atual não estar na lista de domínios autorizados
-//    do Firebase (Authentication → Settings → Authorized domains).
+// Aviso automático para o problema mais comum ao testar: abrir o
+// index.html direto do disco (file://) em vez de servir por
+// http(s) — o Firebase Auth não funciona assim.
 // ------------------------------------------------------------
 if(location.protocol === "file:"){
   authError.innerHTML =
@@ -38,15 +32,11 @@ function showAuthError(err){
     "auth/invalid-credential": "E-mail ou senha incorretos.",
     "auth/email-already-in-use": "Já existe uma conta com esse e-mail.",
     "auth/weak-password": "A senha precisa ter pelo menos 6 caracteres.",
-    "auth/operation-not-allowed": "Esse método de login não está ativado no Firebase. Vá em Authentication → Sign-in method e ative E-mail/senha ou Google.",
+    "auth/operation-not-allowed": "O login por e-mail/senha não está ativado no Firebase. Vá em Authentication → Sign-in method e ative.",
     "auth/unauthorized-domain": `Este domínio (${location.hostname}) não está autorizado no Firebase. Vá em Authentication → Settings → Authorized domains e adicione "${location.hostname}".`,
     "auth/network-request-failed": "Falha de rede. Verifique sua internet e tente de novo.",
-    "auth/popup-blocked": "O navegador bloqueou o pop-up de login. Permita pop-ups para este site e tente de novo.",
-    "auth/popup-closed-by-user": "A janela de login do Google foi fechada antes de terminar.",
-    "auth/cancelled-popup-request": "Login cancelado — só uma janela de login pode ficar aberta por vez.",
-    "auth/web-storage-unsupported": "Este navegador (ou o modo privado/anônimo) está bloqueando cookies necessários para o login com Google.",
     "auth/internal-error": "Erro interno do Firebase. Confira se o projeto e a apiKey em firebase-config.js estão corretos.",
-    "auth/configuration-not-found": "O provedor de login não está configurado no Firebase (ative em Authentication → Sign-in method)."
+    "auth/configuration-not-found": "O login por e-mail/senha não está configurado no Firebase (ative em Authentication → Sign-in method)."
   };
   const friendly = map[err.code];
   authError.innerHTML = friendly
@@ -73,8 +63,10 @@ document.getElementById("signin-form").addEventListener("submit", async (e) => {
   const email = document.getElementById("signin-email").value.trim();
   const password = document.getElementById("signin-password").value;
   try{
-    const cred = await signInWithEmailAndPassword(auth, email, password);
-    if(!(await checkAllowed(cred.user))) return;
+    await signInWithEmailAndPassword(auth, email, password);
+    // a checagem da lista de autorização acontece de forma central em
+    // app.js (watchAuth), então roda tanto aqui quanto ao recarregar
+    // a página com uma sessão já aberta.
   }catch(err){ showAuthError(err); }
 });
 
@@ -87,26 +79,36 @@ document.getElementById("signup-form").addEventListener("submit", async (e) => {
   const password = document.getElementById("signup-password").value;
   try{
     const cred = await createUserWithEmailAndPassword(auth, email, password);
-    if(!(await checkAllowed(cred.user))) return;
     await updateProfile(cred.user, { displayName: name });
     await ensureUserDoc(cred.user);
   }catch(err){ showAuthError(err); }
 });
 
-// --- entrar com Google ---
-document.getElementById("google-signin").addEventListener("click", async () => {
-  authError.textContent = "";
+async function ensureUserDoc(user){
   try{
-    const cred = await signInWithPopup(auth, googleProvider);
-    if(!(await checkAllowed(cred.user))) return;
-    await ensureUserDoc(cred.user);
-  }catch(err){ showAuthError(err); }
-});
+    await setDoc(doc(db, "users", user.uid), {
+      name: user.displayName || "",
+      email: user.email || "",
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  }catch(err){
+    // a conta já foi criada no Auth nesse ponto; um erro aqui costuma ser
+    // regra do Firestore ainda não publicada — avisamos sem desfazer o login
+    console.error("[Haimë auth] Falha ao gravar users/{uid}:", err);
+    showAuthError({ code: err.code, message: "Login funcionou, mas não consegui salvar seu perfil no Firestore — confira se as regras (firestore.rules) foram publicadas." });
+  }
+}
 
-// confere a lista de autorização (config/allowlist). Se o documento
-// não existir, o acesso fica livre (recurso desligado por padrão).
-// Se existir e o e-mail não estiver nela, desloga e avisa.
-async function checkAllowed(user){
+// ------------------------------------------------------------
+// Lista de autorização (allowlist). Chamado por app.js em TODA
+// mudança de estado de autenticação (login novo, cadastro novo,
+// ou uma sessão antiga que volta ao recarregar a página) — não
+// só no envio do formulário, para não deixar brecha em sessões
+// já abertas de alguém removido da lista depois.
+// Se o documento config/allowlist não existir, o acesso fica
+// livre (recurso desligado por padrão).
+// ------------------------------------------------------------
+export async function checkAllowed(user){
   let list;
   try{
     list = await getAllowlist();
@@ -123,21 +125,6 @@ async function checkAllowed(user){
     `Este e-mail (${email}) ainda não foi autorizado a usar o Haimë. ` +
     `Peça para quem administra o app adicionar seu e-mail na lista de acesso.`;
   return false;
-}
-
-async function ensureUserDoc(user){
-  try{
-    await setDoc(doc(db, "users", user.uid), {
-      name: user.displayName || "",
-      email: user.email || "",
-      updatedAt: serverTimestamp()
-    }, { merge: true });
-  }catch(err){
-    // a conta já foi criada no Auth nesse ponto; um erro aqui costuma ser
-    // regra do Firestore ainda não publicada — avisamos sem desfazer o login
-    console.error("[Haimë auth] Falha ao gravar users/{uid}:", err);
-    showAuthError({ code: err.code, message: "Login funcionou, mas não consegui salvar seu perfil no Firestore — confira se as regras (firestore.rules) foram publicadas." });
-  }
 }
 
 export function watchAuth(onLogin, onLogout){
