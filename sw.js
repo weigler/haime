@@ -2,7 +2,7 @@
 // Os dados (hábitos/marcações) sempre vêm do Firestore quando há internet;
 // o cache aqui é só para a interface abrir rápido / funcionar sem rede.
 
-const CACHE = "diario-habitos-v1";
+const CACHE = "haime-v1";
 const SHELL = [
   "./",
   "./index.html",

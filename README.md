@@ -1,8 +1,9 @@
-# Diário — hábitos
+# Haimë — caderno de hábitos
 
-Caderno pessoal de hábitos (construir ou abandonar), com Firebase
-Firestore como banco de dados por usuário e login por e-mail/senha
-ou Google. Site estático, feito para rodar no GitHub Pages.
+*Haimë* (Quenya: "hábito") — caderno pessoal de hábitos (construir ou
+abandonar), com Firebase Firestore como banco de dados por usuário e
+login por e-mail/senha ou Google. Site estático, feito para rodar no
+GitHub Pages.
 
 ## O que ele faz
 
