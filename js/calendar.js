@@ -122,71 +122,71 @@ function formatWeekLabel(start){
 }
 
 // ------------------------------------------------------------
-// Mês
+// Mês — matriz de 4 semanas (4x7 = 28 dias), sempre as mais
+// recentes até hoje. Sem navegação: é uma janela "rolante".
 // ------------------------------------------------------------
-export function renderMonth(container, habit, logs, refDate, onToggle){
-  const monthStart = startOfMonth(refDate);
-  const gridStart = startOfWeek(monthStart);
+export function renderMonth(container, habit, logs, onToggle){
+  const currentWeekStart = startOfWeek(new Date());
+  const start = addDays(currentWeekStart, -21); // 4 semanas, começando pela mais antiga
+  const days = Array.from({length:28}, (_,i) => addDays(start, i));
   const tKey = todayKey();
-  const month = refDate.getMonth();
+  const today = new Date(); today.setHours(0,0,0,0);
 
   container.innerHTML = `
-    <div class="range-nav">
-      <button class="icon-btn" data-nav="-1">‹</button>
-      <span class="range-nav-label">${MONTH_NAMES[refDate.getMonth()]} ${refDate.getFullYear()}</span>
-      <button class="icon-btn" data-nav="1">›</button>
+    <div class="range-nav range-nav-static">
+      <span class="range-nav-label">${formatRangeLabel(start, addDays(start, 27))}</span>
     </div>
+    <div class="month-dow-row"></div>
     <div class="month-grid"></div>
   `;
-  const grid = container.querySelector(".month-grid");
+  const dowRow = container.querySelector(".month-dow-row");
   DOW_SHORT.forEach(d => {
-    const el = document.createElement("div");
+    const el = document.createElement("span");
     el.className = "month-dow";
     el.textContent = d;
-    grid.appendChild(el);
+    dowRow.appendChild(el);
   });
 
-  for(let i=0; i<42; i++){
-    const d = addDays(gridStart, i);
+  const grid = container.querySelector(".month-grid");
+  days.forEach(d => {
     const key = toDateKey(d);
     const log = logs[key];
-    const outside = d.getMonth() !== month;
     const filled = !!log && log.value > 0;
+    const future = d > today;
     const cell = document.createElement("div");
-    cell.className = "month-cell" + (outside ? " is-outside" : "") + (key === tKey ? " is-today" : "");
+    cell.className = "month-cell" + (key === tKey ? " is-today" : "") + (future ? " is-outside" : "");
     cell.innerHTML = `
       <span class="month-cell-num">${d.getDate()}</span>
       ${filled ? `<span class="month-stamp" style="background:${habit.color}"></span>` : ""}
     `;
-    if(!outside){
+    if(!future){
       cell.addEventListener("click", () => onToggle(key, log));
       if(habit.type === "count"){
         cell.addEventListener("contextmenu", (e) => { e.preventDefault(); onToggle(key, log, true); });
       }
     }
     grid.appendChild(cell);
-  }
-
-  container.querySelectorAll("[data-nav]").forEach(btn => {
-    btn.addEventListener("click", () => {
-      const delta = parseInt(btn.dataset.nav, 10);
-      const next = new Date(refDate.getFullYear(), refDate.getMonth()+delta, 1);
-      renderMonth(container, habit, logs, next, onToggle);
-    });
   });
 }
 
+function formatRangeLabel(start, end){
+  const sameMonth = start.getMonth() === end.getMonth();
+  const startStr = sameMonth ? `${start.getDate()}` : `${start.getDate()} ${MONTH_NAMES[start.getMonth()].slice(0,3)}`;
+  return `${startStr} – ${end.getDate()} ${MONTH_NAMES[end.getMonth()]} ${end.getFullYear()}`;
+}
+
 // ------------------------------------------------------------
-// Heatmap de 6 meses (estilo "contribuições", semanas x dias)
+// Semestral — matriz de 24 semanas (24x7 = 168 dias), cada
+// quadradinho é um dia (estilo "contribuições", semanas x dias).
 // ------------------------------------------------------------
 export function renderHeatmap(container, habit, logs, onToggle){
   const today = new Date(); today.setHours(0,0,0,0);
   const end = startOfWeek(today);
-  const start = addDays(end, -25*7); // ~26 semanas ≈ 6 meses
+  const start = addDays(end, -23*7); // 24 semanas
   const tKey = todayKey();
 
   const weeks = [];
-  for(let w=0; w<=25; w++){
+  for(let w=0; w<24; w++){
     const weekStart = addDays(start, w*7);
     weeks.push(Array.from({length:7}, (_,i) => addDays(weekStart, i)));
   }

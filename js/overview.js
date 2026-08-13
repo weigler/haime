@@ -1,5 +1,5 @@
 import { watchHabits, watchLogs, setLog } from "./db.js";
-import { toDateKey, addDays, startOfWeek, todayKey, DOW_SHORT, MONTH_NAMES } from "./calendar.js";
+import { toDateKey, addDays, startOfWeek, todayKey, MONTH_NAMES } from "./calendar.js";
 import { showPanel, setActiveNav } from "./panel-router.js";
 import { deselectHabit } from "./habits.js";
 
@@ -83,7 +83,7 @@ function render(){
   }
   if(currentView === "week") renderDaily(containers.week, weekDays());
   if(currentView === "month") renderDaily(containers.month, monthDays());
-  if(currentView === "semester") renderSemester(containers.semester);
+  if(currentView === "semester") renderDaily(containers.semester, semesterDays(), { compact: true });
 }
 
 function weekDays(){
@@ -94,14 +94,32 @@ function monthDays(){
   const start = startOfWeek(addDays(new Date(), -21));
   return Array.from({length:28}, (_,i) => addDays(start, i));
 }
+function semesterDays(){
+  const start = startOfWeek(addDays(new Date(), -23*7));
+  return Array.from({length:168}, (_,i) => addDays(start, i));
+}
 
-function renderDaily(container, days){
+function renderDaily(container, days, { compact = false } = {}){
   const tKey = todayKey();
+  let lastMonth = -1;
+
   const header = `
     <div class="overview-row overview-header">
       <div class="overview-label"></div>
       <div class="overview-cells">
-        ${days.map(d => `<span class="overview-col-label">${d.getDate()}</span>${d.getDay()===6 ? '<span class="overview-week-gap"></span>':''}`).join("")}
+        ${days.map(d => {
+          let label = "";
+          if(compact){
+            if(d.getDay() === 0 && d.getMonth() !== lastMonth){
+              lastMonth = d.getMonth();
+              label = MONTH_NAMES[d.getMonth()].slice(0,3);
+            }
+          } else {
+            label = d.getDate();
+          }
+          const gap = d.getDay()===6 ? '<span class="overview-week-gap"></span>' : '';
+          return `<span class="overview-col-label${compact ? " is-compact" : ""}">${label}</span>${gap}`;
+        }).join("")}
       </div>
     </div>`;
 
@@ -112,9 +130,11 @@ function renderDaily(container, days){
       const log = logs[key];
       const filled = !!log && log.value > 0;
       const isToday = key === tKey;
+      const isFuture = d > new Date();
       const style = filled ? `background:${h.color};border-color:${h.color}` : "";
       const gap = d.getDay() === 6 ? '<span class="overview-week-gap"></span>' : "";
-      return `<span class="overview-cell${isToday ? " is-today" : ""}" style="${style}" data-habit="${h.id}" data-date="${key}" title="${h.name} · ${d.getDate()}/${d.getMonth()+1}"></span>${gap}`;
+      const readonly = isFuture ? " is-readonly" : "";
+      return `<span class="overview-cell${compact ? " is-compact" : ""}${isToday ? " is-today" : ""}${readonly}" style="${style}" data-habit="${h.id}" data-date="${key}" title="${escapeHtml(h.name)} · ${d.getDate()}/${d.getMonth()+1}"></span>${gap}`;
     }).join("");
     return `
       <div class="overview-row">
@@ -128,7 +148,7 @@ function renderDaily(container, days){
 
   container.innerHTML = `<div class="overview-scroll"><div class="overview-grid-wrap">${header}${rows}</div></div>`;
 
-  container.querySelectorAll(".overview-cell").forEach(cell => {
+  container.querySelectorAll(".overview-cell:not(.is-readonly)").forEach(cell => {
     cell.addEventListener("click", () => toggleCell(cell.dataset.habit, cell.dataset.date));
     cell.addEventListener("contextmenu", (e) => {
       const habit = habits.find(h => h.id === cell.dataset.habit);
@@ -150,48 +170,6 @@ async function toggleCell(habitId, dateKey, decrement){
     const filled = !!log && log.value > 0;
     await setLog(uid, habitId, dateKey, filled ? 0 : 1);
   }
-}
-
-function renderSemester(container){
-  const today = new Date(); today.setHours(0,0,0,0);
-  const end = startOfWeek(today);
-  const weeks = Array.from({length:26}, (_,i) => addDays(end, -(25-i)*7));
-
-  let lastMonth = -1;
-  const header = `
-    <div class="overview-row overview-header">
-      <div class="overview-label"></div>
-      <div class="overview-cells">
-        ${weeks.map(w => {
-          const label = w.getMonth() !== lastMonth ? (lastMonth = w.getMonth(), MONTH_NAMES[w.getMonth()].slice(0,3)) : "";
-          return `<span class="overview-col-label" style="width:14px">${label}</span>`;
-        }).join("")}
-      </div>
-    </div>`;
-
-  const rows = habits.map(h => {
-    const logs = logsMap[h.id] || {};
-    const cells = weeks.map(weekStart => {
-      let count = 0;
-      for(let i=0;i<7;i++){
-        const key = toDateKey(addDays(weekStart, i));
-        if(logs[key] && logs[key].value > 0) count++;
-      }
-      const intensity = count / 7;
-      const style = intensity > 0 ? `background:${h.color};opacity:${(0.35 + intensity*0.65).toFixed(2)};border-color:${h.color}` : "";
-      return `<span class="overview-cell is-readonly" style="width:14px;height:14px;${style}" title="${h.name} · semana de ${weekStart.getDate()}/${weekStart.getMonth()+1}: ${count}/7 dias"></span>`;
-    }).join("");
-    return `
-      <div class="overview-row">
-        <div class="overview-label">
-          <span class="overview-label-dot" style="background:${h.color}33;color:${h.color}">${h.icon}</span>
-          <span class="overview-label-name">${escapeHtml(h.name)}</span>
-        </div>
-        <div class="overview-cells">${cells}</div>
-      </div>`;
-  }).join("");
-
-  container.innerHTML = `<div class="overview-scroll"><div class="overview-grid-wrap">${header}${rows}</div></div>`;
 }
 
 function escapeHtml(str){
