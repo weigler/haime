@@ -16,6 +16,10 @@ GitHub Pages.
   (várias vezes por dia, com meta diária opcional).
 - Três visões: **Semana**, **Mês** e **Heatmap de 6 meses** (estilo
   "contribuições", semanas × dias da semana).
+- **Configurações** (ícone de engrenagem no topo): escolha entre
+  tema **claro** ou **escuro**, e 6 opções de **cor de fundo**
+  (Ardósia, Marfim, Bruma, Musgo, Ameixa, Carvão). A preferência
+  fica salva no navegador do aparelho.
 - Multiusuário: cada pessoa que criar conta (e-mail/senha ou Google)
   tem seus próprios hábitos, isolados pelas regras do Firestore.
 - Funciona como PWA (pode "instalar" no celular/computador).
@@ -98,6 +102,7 @@ css/style.css           todo o visual
 js/firebase-config.js   suas credenciais do Firebase (edite este arquivo)
 js/auth.js              login/cadastro por e-mail e por Google
 js/db.js                leitura/escrita no Firestore
+js/settings.js          tema (claro/escuro) e paleta de cor de fundo
 js/calendar.js          cálculo de datas, streak e renderização das 3 visões
 js/habits.js            lista de hábitos, modal de criar/editar, seleção
 js/app.js               liga tudo: autenticação → tela do app

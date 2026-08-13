@@ -93,10 +93,10 @@ export function renderWeek(container, habit, logs, refDate, onToggle){
     cell.innerHTML = `
       <span class="day-cell-dow">${DOW_SHORT[d.getDay()]}</span>
       <span class="day-cell-num">${d.getDate()}</span>
-      <span class="day-stamp ${filled ? "" : "is-empty"}" style="${filled ? `background:${habit.color}` : ""}">
-        ${filled ? stampContent(habit, log) : ""}
+      <span class="day-stamp ${filled ? "" : "is-empty"}" style="${filled ? `background:${habit.color}33` : ""}">
+        ${filled ? habit.icon : ""}
+        ${filled && habit.type === "count" ? `<span class="day-count-badge">${log.value}${habit.target ? "/"+habit.target : ""}</span>` : ""}
       </span>
-      ${habit.type === "count" && filled ? `<span class="day-count">${log.value}${habit.target ? "/"+habit.target : ""}</span>` : ""}
     `;
     cell.addEventListener("click", () => onToggle(key, log));
     if(habit.type === "count"){
@@ -119,12 +119,6 @@ function formatWeekLabel(start){
   const sameMonth = start.getMonth() === end.getMonth();
   const startStr = `${start.getDate()} ${sameMonth ? "" : MONTH_NAMES[start.getMonth()].slice(0,3)}`.trim();
   return `${startStr} – ${end.getDate()} ${MONTH_NAMES[end.getMonth()]} ${end.getFullYear()}`;
-}
-
-function stampContent(habit, log){
-  if(habit.goal === "quit") return "✕";
-  if(habit.type === "count") return log.value;
-  return "✓";
 }
 
 // ------------------------------------------------------------
@@ -162,7 +156,7 @@ export function renderMonth(container, habit, logs, refDate, onToggle){
     cell.className = "month-cell" + (outside ? " is-outside" : "") + (key === tKey ? " is-today" : "");
     cell.innerHTML = `
       <span class="month-cell-num">${d.getDate()}</span>
-      ${filled ? `<span class="month-stamp" style="background:${habit.color}"></span>` : ""}
+      ${filled ? `<span class="month-stamp" style="background:${habit.color}33">${habit.icon}</span>` : ""}
     `;
     if(!outside){
       cell.addEventListener("click", () => onToggle(key, log));
@@ -209,7 +203,7 @@ export function renderHeatmap(container, habit, logs, onToggle){
     </div>
     <div class="heatmap-legend">
       <span>menos</span>
-      <span class="heatmap-cell" style="background:var(--ink-800)"></span>
+      <span class="heatmap-cell" style="background:var(--surface)"></span>
       <span class="heatmap-cell" style="background:${habit.color}66"></span>
       <span class="heatmap-cell" style="background:${habit.color}"></span>
       <span>mais</span>
@@ -239,7 +233,7 @@ export function renderHeatmap(container, habit, logs, onToggle){
         cell.style.background = habit.color;
         cell.style.opacity = String(0.45 + intensity*0.55);
       }
-      if(key === tKey) cell.style.outline = "1.5px solid var(--paper)";
+      if(key === tKey) cell.style.outline = "1.5px solid var(--text-faint)";
       cell.addEventListener("click", () => { if(d <= today) onToggle(key, log); });
       if(habit.type === "count"){
         cell.addEventListener("contextmenu", (e) => { e.preventDefault(); if(d <= today) onToggle(key, log, true); });

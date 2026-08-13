@@ -4,13 +4,22 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Haimë</title>
-<meta name="theme-color" content="#141A1F">
+<meta name="theme-color" content="#15181C">
+<script>
+  // aplica tema/paleta salvos ANTES do CSS carregar, evitando flash
+  (function(){
+    var theme = localStorage.getItem('haime-theme') || 'dark';
+    var palette = localStorage.getItem('haime-palette') || 'slate';
+    document.documentElement.setAttribute('data-theme', theme);
+    document.documentElement.setAttribute('data-palette', palette);
+  })();
+</script>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
@@ -19,7 +28,7 @@
 <section id="auth-screen" class="auth-screen">
   <div class="auth-card">
     <div class="brand">
-      <span class="brand-mark">§</span>
+      <span class="brand-mark">H</span>
       <h1>Haimë</h1>
       <p class="brand-sub">um caderno de hábitos, só seu</p>
     </div>
@@ -68,11 +77,12 @@
 
   <header class="topbar">
     <div class="topbar-brand">
-      <span class="brand-mark">§</span>
+      <span class="brand-mark">H</span>
       <span class="topbar-title">Haimë</span>
     </div>
     <div class="topbar-actions">
       <button id="btn-new-habit" class="btn btn-accent btn-sm">+ Hábito</button>
+      <button id="btn-settings" class="icon-btn" title="Configurações">⚙</button>
       <button id="btn-user-menu" class="user-chip">
         <span id="user-initial">?</span>
       </button>
@@ -97,7 +107,7 @@
     <!-- painel do hábito selecionado -->
     <main class="panel">
       <div id="panel-empty" class="panel-empty">
-        <span class="panel-empty-mark">§</span>
+        <span class="panel-empty-mark">H</span>
         <p>Escolha um hábito ao lado<br>ou crie um novo para começar a marcar os dias.</p>
       </div>
 
@@ -185,9 +195,39 @@
 
 <div id="toast" class="toast is-hidden"></div>
 
+<!-- ===== MODAL: CONFIGURAÇÕES ===== -->
+<div id="settings-modal" class="modal-overlay is-hidden">
+  <div class="modal">
+    <div class="modal-head">
+      <h3>Configurações</h3>
+      <button id="settings-close" class="icon-btn">×</button>
+    </div>
+
+    <div class="settings-section">
+      <span class="settings-label">Tema</span>
+      <div id="theme-toggle" class="theme-toggle">
+        <button type="button" class="theme-opt" data-theme="light">
+          <span class="theme-opt-swatch" style="background:#F7F8F9"></span>
+          Claro
+        </button>
+        <button type="button" class="theme-opt" data-theme="dark">
+          <span class="theme-opt-swatch" style="background:#15181C"></span>
+          Escuro
+        </button>
+      </div>
+    </div>
+
+    <div class="settings-section">
+      <span class="settings-label">Cor de fundo</span>
+      <div id="palette-grid" class="palette-grid"></div>
+    </div>
+  </div>
+</div>
+
 <!-- Firebase SDK (modular, via CDN) -->
 <script type="module" src="js/firebase-config.js"></script>
 <script type="module" src="js/db.js"></script>
+<script type="module" src="js/settings.js"></script>
 <script type="module" src="js/auth.js"></script>
 <script type="module" src="js/calendar.js"></script>
 <script type="module" src="js/habits.js"></script>

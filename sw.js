@@ -10,6 +10,7 @@ const SHELL = [
   "./js/app.js",
   "./js/auth.js",
   "./js/db.js",
+  "./js/settings.js",
   "./js/habits.js",
   "./js/calendar.js",
   "./js/firebase-config.js",
