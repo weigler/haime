@@ -1,6 +1,7 @@
 import { watchHabits, watchLogs, setLog, watchTasks, updateTask } from "./db.js";
 import { toDateKey, addDays, startOfWeek, todayKey, computeStreak, DOW_SHORT } from "./calendar.js";
 import { showPanel, setActiveNav, registerTeardown, teardownOthers } from "./panel-router.js";
+import { sortTasks, isOverdue, PRIORITIES } from "./tasks.js";
 
 const WEEKDAY_FULL = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
 const MONTH_FULL = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
@@ -29,6 +30,7 @@ const tasksEmptyEl = document.getElementById("today-tasks-empty");
 const tasksCountEl = document.getElementById("today-tasks-count");
 const seeHabitsBtn = document.getElementById("today-see-habits");
 const seeTasksBtn = document.getElementById("today-see-tasks");
+const overdueBanner = document.getElementById("today-overdue-banner");
 
 export function initTodayUid(userId){
   uid = userId;
@@ -47,6 +49,7 @@ export function teardownToday(){
   habitsListEl.innerHTML = "";
   tasksListEl.innerHTML = "";
   weekStrip.innerHTML = "";
+  overdueBanner.classList.add("is-hidden");
 }
 registerTeardown("today", teardownToday);
 
@@ -67,6 +70,9 @@ seeHabitsBtn.addEventListener("click", () => {
   document.querySelector('[data-mobile-tab="habits"]')?.click();
 });
 seeTasksBtn.addEventListener("click", () => {
+  document.getElementById("btn-tasks").click();
+});
+overdueBanner.addEventListener("click", () => {
   document.getElementById("btn-tasks").click();
 });
 
@@ -205,20 +211,32 @@ function renderTasks(){
     const items = t.items || [];
     return items.length > 0 ? !items.every(i => i.done) : !t.done;
   });
-  tasksCountEl.textContent = pending.length ? `${pending.length}` : "";
-  tasksEmptyEl.classList.toggle("is-hidden", pending.length > 0);
+  const overdueCount = pending.filter(isOverdue).length;
+  overdueBanner.classList.toggle("is-hidden", overdueCount === 0);
+  overdueBanner.textContent = overdueCount === 1 ? "🔴 1 tarefa atrasada" : `🔴 ${overdueCount} tarefas atrasadas`;
+
+  const sorted = sortTasks(pending);
+  tasksCountEl.textContent = sorted.length ? `${sorted.length}` : "";
+  tasksEmptyEl.classList.toggle("is-hidden", sorted.length > 0);
   tasksListEl.innerHTML = "";
 
-  pending.slice(0, 6).forEach(task => {
+  sorted.slice(0, 6).forEach(task => {
     const items = task.items || [];
     const hasItems = items.length > 0;
+    const overdue = isOverdue(task);
+    const priority = PRIORITIES[task.priority];
+    const metaBits = [];
+    if(priority) metaBits.push(`${priority.emoji} ${priority.label}`);
+    if(task.dueDate) metaBits.push(overdue ? "atrasada" : "com prazo");
+    if(hasItems) metaBits.push(`${items.filter(i=>i.done).length}/${items.length} itens`);
+
     const row = document.createElement("div");
-    row.className = "today-row";
+    row.className = "today-row" + (overdue ? " is-overdue-row" : "");
     row.innerHTML = `
       <button type="button" class="today-check"></button>
       <span class="today-row-body">
         <span class="today-row-name">${escapeHtml(task.title)}</span>
-        ${hasItems ? `<span class="today-row-freq">${items.filter(i=>i.done).length}/${items.length} itens</span>` : ""}
+        ${metaBits.length ? `<span class="today-row-freq">${metaBits.join(" · ")}</span>` : ""}
       </span>
     `;
     row.querySelector(".today-check").addEventListener("click", () => {

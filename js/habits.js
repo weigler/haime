@@ -181,7 +181,7 @@ function renderView(habit){
 
   const onToggle = (key, log, decrement) => handleToggle(habit, key, log, decrement);
 
-  if(currentView === "week") renderWeek(week, habit, currentLogs, refDate, onToggle);
+  if(currentView === "week") renderWeek(week, habit, currentLogs, refDate, onToggle, (newDate) => { refDate = newDate; });
   if(currentView === "month") renderMonth(month, habit, currentLogs, onToggle);
   if(currentView === "heatmap") renderHeatmap(heat, habit, currentLogs, onToggle);
 }

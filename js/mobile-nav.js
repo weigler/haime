@@ -37,6 +37,18 @@ document.getElementById("more-menu-overview").addEventListener("click", () => {
   document.getElementById("btn-overview").click();
 });
 
+document.getElementById("more-menu-timer").addEventListener("click", () => {
+  closeMoreMenu();
+  setActiveTab(null);
+  document.getElementById("btn-timer").click();
+});
+
+document.getElementById("more-menu-goals").addEventListener("click", () => {
+  closeMoreMenu();
+  setActiveTab(null);
+  document.getElementById("btn-goals").click();
+});
+
 document.getElementById("more-menu-settings").addEventListener("click", () => {
   closeMoreMenu();
   document.getElementById("btn-settings").click();

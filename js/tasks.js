@@ -1,10 +1,18 @@
 import { watchTasks, createTask, updateTask, deleteTask } from "./db.js";
+import { todayKey } from "./calendar.js";
 import { showPanel, setActiveNav, registerTeardown, teardownOthers } from "./panel-router.js";
+
+export const PRIORITIES = {
+  high:   { label: "Alta",  emoji: "🔴", order: 3 },
+  medium: { label: "Média", emoji: "🟠", order: 2 },
+  low:    { label: "Baixa", emoji: "⚪", order: 1 },
+};
 
 let uid = null;
 let tasks = [];
 let tasksUnsub = null;
-let expanded = new Set(); // ids de tarefas com os sub-itens abertos
+let expanded = new Set();     // ids de tarefas com os sub-itens abertos
+let editingMeta = new Set();  // ids de tarefas com o editor de data/prioridade aberto
 
 const btnTasks = document.getElementById("btn-tasks");
 const taskForm = document.getElementById("task-form");
@@ -20,6 +28,7 @@ export function teardownTasks(){
   if(tasksUnsub){ tasksUnsub(); tasksUnsub = null; }
   tasks = [];
   expanded = new Set();
+  editingMeta = new Set();
   tasksList.innerHTML = "";
 }
 registerTeardown("tasks", teardownTasks);
@@ -47,13 +56,51 @@ taskForm.addEventListener("submit", async (e) => {
   await createTask(uid, title);
 });
 
-function render(){
-  tasksList.innerHTML = "";
-  tasksEmpty.classList.toggle("is-hidden", tasks.length > 0);
+// ------------------------------------------------------------
+// Ordenação: pendentes primeiro (prioridade alta→baixa, depois
+// data mais próxima primeiro, sem data por último), concluídas
+// no final.
+// ------------------------------------------------------------
+export function sortTasks(list){
+  const isDone = (t) => {
+    const items = t.items || [];
+    return items.length > 0 ? items.every(i => i.done) : !!t.done;
+  };
+  return [...list].sort((a, b) => {
+    const doneA = isDone(a), doneB = isDone(b);
+    if(doneA !== doneB) return doneA ? 1 : -1;
 
-  tasks.forEach(task => {
+    const pA = PRIORITIES[a.priority]?.order || 0;
+    const pB = PRIORITIES[b.priority]?.order || 0;
+    if(pA !== pB) return pB - pA;
+
+    if(a.dueDate && b.dueDate) return a.dueDate < b.dueDate ? -1 : a.dueDate > b.dueDate ? 1 : 0;
+    if(a.dueDate) return -1;
+    if(b.dueDate) return 1;
+    return 0;
+  });
+}
+
+export function isOverdue(task){
+  const items = task.items || [];
+  const done = items.length > 0 ? items.every(i => i.done) : !!task.done;
+  return !done && task.dueDate && task.dueDate < todayKey();
+}
+
+function render(){
+  const sorted = sortTasks(tasks);
+  tasksList.innerHTML = "";
+  tasksEmpty.classList.toggle("is-hidden", sorted.length > 0);
+
+  sorted.forEach(task => {
     tasksList.appendChild(renderTaskRow(task));
   });
+}
+
+function formatDueLabel(dueDate){
+  const [y,m,d] = dueDate.split("-").map(Number);
+  const date = new Date(y, m-1, d);
+  return date.toLocaleDateString("pt-BR", { day:"2-digit", month:"short" }).replace(".", "");
 }
 
 function renderTaskRow(task){
@@ -61,26 +108,36 @@ function renderTaskRow(task){
   const hasItems = items.length > 0;
   const isDone = hasItems ? items.every(i => i.done) : !!task.done;
   const isOpen = expanded.has(task.id);
+  const isEditingMeta = editingMeta.has(task.id);
+  const overdue = isOverdue(task);
+  const priority = PRIORITIES[task.priority];
 
   const wrap = document.createElement("div");
   wrap.className = "task-item" + (isDone ? " is-done" : "");
 
   const row = document.createElement("div");
   row.className = "task-row";
+
+  const metaBits = [];
+  if(priority) metaBits.push(`<span class="task-meta-chip">${priority.emoji} ${priority.label}</span>`);
+  if(task.dueDate) metaBits.push(`<span class="task-meta-chip${overdue ? " is-overdue" : ""}">📅 ${formatDueLabel(task.dueDate)}${overdue ? " · atrasada" : ""}</span>`);
+
   row.innerHTML = `
     <button type="button" class="task-check${isDone ? " is-checked" : ""}" title="${isDone ? "Desmarcar" : "Concluir"}">
       ${isDone ? "✓" : ""}
     </button>
-    <span class="task-title" tabindex="0">${escapeHtml(task.title)}</span>
+    <span class="task-title-wrap">
+      <span class="task-title" tabindex="0">${escapeHtml(task.title)}</span>
+      ${metaBits.length ? `<span class="task-meta-row">${metaBits.join("")}</span>` : ""}
+    </span>
     ${hasItems ? `<span class="task-progress">${items.filter(i=>i.done).length}/${items.length}</span>` : ""}
+    <button type="button" class="icon-btn icon-btn-tiny task-meta-btn" title="Data e prioridade">🗓</button>
     <button type="button" class="icon-btn icon-btn-tiny task-expand" title="Sub-itens">${isOpen ? "▾" : "▸"}</button>
     <button type="button" class="icon-btn icon-btn-tiny task-delete" title="Excluir">×</button>
   `;
 
-  // concluir/desmarcar a tarefa (só relevante quando não tem sub-itens controlando o estado)
   row.querySelector(".task-check").addEventListener("click", () => {
     if(hasItems){
-      // marca/desmarca todos os sub-itens de uma vez
       const newDone = !isDone;
       updateTask(uid, task.id, { items: items.map(i => ({ ...i, done: newDone })) });
     } else {
@@ -88,8 +145,12 @@ function renderTaskRow(task){
     }
   });
 
-  // renomear (clique no título vira campo editável)
   row.querySelector(".task-title").addEventListener("click", () => startRename(row, task));
+
+  row.querySelector(".task-meta-btn").addEventListener("click", () => {
+    if(editingMeta.has(task.id)) editingMeta.delete(task.id); else editingMeta.add(task.id);
+    render();
+  });
 
   row.querySelector(".task-expand").addEventListener("click", () => {
     if(expanded.has(task.id)) expanded.delete(task.id); else expanded.add(task.id);
@@ -103,11 +164,39 @@ function renderTaskRow(task){
 
   wrap.appendChild(row);
 
+  if(isEditingMeta){
+    wrap.appendChild(renderMetaEditor(task));
+  }
   if(isOpen){
     wrap.appendChild(renderSubItems(task, items));
   }
 
   return wrap;
+}
+
+function renderMetaEditor(task){
+  const box = document.createElement("div");
+  box.className = "task-meta-editor";
+  box.innerHTML = `
+    <label>Prazo
+      <input type="date" class="task-date-input" value="${task.dueDate || ""}">
+    </label>
+    <div class="task-priority-picker">
+      ${Object.entries(PRIORITIES).map(([key, p]) => `
+        <button type="button" class="task-priority-opt${task.priority === key ? " is-selected" : ""}" data-priority="${key}">${p.emoji} ${p.label}</button>
+      `).join("")}
+      <button type="button" class="task-priority-opt${!task.priority ? " is-selected" : ""}" data-priority="">Nenhuma</button>
+    </div>
+  `;
+  box.querySelector(".task-date-input").addEventListener("change", (e) => {
+    updateTask(uid, task.id, { dueDate: e.target.value || null });
+  });
+  box.querySelectorAll(".task-priority-opt").forEach(btn => {
+    btn.addEventListener("click", () => {
+      updateTask(uid, task.id, { priority: btn.dataset.priority || null });
+    });
+  });
+  return box;
 }
 
 function startRename(row, task){
@@ -125,7 +214,7 @@ function startRename(row, task){
     if(value && value !== task.title){
       updateTask(uid, task.id, { title: value });
     } else {
-      render(); // reverte sem mudar nada
+      render();
     }
   };
   input.addEventListener("keydown", (e) => {

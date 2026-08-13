@@ -3,6 +3,8 @@ import { initHabits, teardownHabits } from "./habits.js";
 import { initOverviewUid, teardownOverview } from "./overview.js";
 import { initTasksUid, teardownTasks } from "./tasks.js";
 import { initTodayUid, teardownToday, enterToday } from "./today.js";
+import { initTimerUid, teardownTimer } from "./timer.js";
+import { initGoalsUid, teardownGoals } from "./goals.js";
 import { initDataTools, teardownDataTools } from "./data-tools.js";
 import { runAutoBackupIfDue } from "./backup.js";
 import { showToast } from "./toast.js";
@@ -31,6 +33,8 @@ watchAuth(
     initOverviewUid(user.uid);
     initTasksUid(user.uid);
     initTodayUid(user.uid);
+    initTimerUid(user.uid);
+    initGoalsUid(user.uid);
     initDataTools(user.uid);
     enterToday(); // tela inicial, como no app de referência
 
@@ -46,6 +50,8 @@ watchAuth(
     teardownOverview();
     teardownTasks();
     teardownToday();
+    teardownTimer();
+    teardownGoals();
     teardownDataTools();
     showPanel("empty");
     setActiveNav(null);

@@ -1,5 +1,5 @@
 import { watchHabits, watchLogs, setLog } from "./db.js";
-import { toDateKey, addDays, startOfWeek, todayKey, DOW_SHORT, MONTH_NAMES } from "./calendar.js";
+import { toDateKey, addDays, startOfWeek, todayKey, DOW_SHORT, MONTH_NAMES, contrastText } from "./calendar.js";
 import { showPanel, setActiveNav, registerTeardown, teardownOthers } from "./panel-router.js";
 
 let uid = null;
@@ -172,18 +172,35 @@ function renderWeekGrid(container, weeks){
 
   const blocks = habits.map(h => {
     const logs = logsMap[h.id] || {};
-    const cols = weeks.map(week => {
-      const cells = week.map(d => {
-        const key = toDateKey(d);
-        const log = logs[key];
-        const filled = !!log && log.value > 0;
-        const isFuture = d > today;
-        const isToday = key === tKey;
-        const style = filled ? `background:${h.color}` : "";
-        return `<span class="overview-heat-cell${isToday ? " is-today" : ""}${isFuture ? " is-readonly" : ""}" style="${style}" data-habit="${h.id}" data-date="${key}" title="${escapeHtml(h.name)} · ${d.getDate()}/${d.getMonth()+1}"></span>`;
-      }).join("");
-      return `<div class="overview-heat-col">${cells}</div>`;
+    let lastMonth = -1;
+
+    const monthLabels = weeks.map(week => {
+      const firstDow = week[0];
+      let label = "";
+      if(firstDow.getMonth() !== lastMonth){
+        lastMonth = firstDow.getMonth();
+        label = MONTH_NAMES[firstDow.getMonth()].slice(0,3);
+      }
+      return `<span>${label}</span>`;
     }).join("");
+
+    const cols = weeks.map(week => week.map(d => {
+      const key = toDateKey(d);
+      const log = logs[key];
+      const filled = !!log && log.value > 0;
+      const isFuture = d > today;
+      const isToday = key === tKey;
+      let style = "";
+      let text = "";
+      if(filled){
+        style = `background:${h.color}`;
+        if(h.type === "count"){
+          text = `${log.value}x`;
+          style += `;color:${contrastText(h.color)}`;
+        }
+      }
+      return `<span class="heatmap-cell${isToday ? " is-today" : ""}${isFuture ? " is-readonly" : ""}" style="${style}" data-habit="${h.id}" data-date="${key}" title="${escapeHtml(h.name)} · ${d.getDate()}/${d.getMonth()+1}">${text}</span>`;
+    }).join("")).join("");
 
     return `
       <div class="overview-heat-block">
@@ -191,15 +208,19 @@ function renderWeekGrid(container, weeks){
           <span class="overview-label-dot" style="background:${h.color}33;color:${h.color}">${h.icon}</span>
           <span class="overview-label-name">${escapeHtml(h.name)}</span>
         </div>
-        <div class="overview-heat-grid-wrap">
-          <div class="overview-heat-dows">${DOW_SHORT.map(d => `<span>${d[0]}</span>`).join("")}</div>
-          <div class="overview-heat-grid">${cols}</div>
+        <div class="heatmap-top">
+          <span class="heatmap-top-spacer"></span>
+          <div class="heatmap-months">${monthLabels}</div>
+        </div>
+        <div class="heatmap-body">
+          <div class="heatmap-dows">${DOW_SHORT.map(d => `<span>${d[0]}</span>`).join("")}</div>
+          <div class="heatmap-grid">${cols}</div>
         </div>
       </div>`;
   }).join("");
 
   container.innerHTML = `<div class="overview-heat-wrap">${blocks}</div>`;
-  wireCells(container, ".overview-heat-cell");
+  wireCells(container, ".heatmap-cell");
 }
 
 function wireCells(container, selector = ".overview-cell"){

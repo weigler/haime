@@ -17,6 +17,27 @@ GitHub Pages.
 - Três visões por hábito: **Semana**, **Mês** (matriz rolante das
   últimas 4 semanas) e **Semestral** (matriz de 24 semanas, um
   quadradinho por dia — estilo "contribuições").
+- **Timer**: sessão de foco com predefinições (5/15/25/45/60 min)
+  ou minutos personalizados, opcionalmente vinculada a um hábito
+  (ao terminar, marca o hábito automaticamente). Toca um som e
+  tenta mostrar uma notificação ao final, e guarda um histórico das
+  últimas sessões concluídas.
+- **Metas**: objetivos de longo prazo, separados dos hábitos do
+  dia a dia — título, descrição opcional, prazo opcional, e uma
+  barra de progresso manual (0–100%). Pode vincular a meta a um
+  hábito só como referência visual.
+- **Tarefas com prazo e prioridade**: cada tarefa pode ter uma
+  data de vencimento e uma prioridade (Alta/Média/Baixa), editáveis
+  pelo ícone 🗓 na linha da tarefa. A lista se reordena sozinha:
+  prioridade mais alta e prazo mais próximo primeiro, concluídas no
+  fim. Tarefas atrasadas ganham destaque vermelho e disparam o
+  aviso "N tarefas atrasadas" na aba Hoje.
+- **Quadrados maiores e consistentes**: nas visões Mês e Semestral
+  (tanto por hábito quanto na Visão geral), a grade agora ocupa
+  sempre a largura total disponível — os quadrados crescem ou
+  encolhem para caber, sem precisar de rolagem lateral. Hábitos de
+  contagem mostram o multiplicador (ex.: "2x") direto no quadrado,
+  igual à visão semanal.
 - **Hoje**: uma tela inicial estilo painel — círculo com a data,
   faixa da semana (toque num dia pra ver/marcar aquele dia), lista
   rápida dos hábitos do dia (check, "+", ou distintivo de sequência
@@ -234,11 +255,28 @@ users/{uid}/tasks/{taskId}
   title       string
   done        bool     (usado só quando a tarefa NÃO tem sub-itens)
   items       array de { id, text, done }  (sub-itens, ex.: mercado)
+  dueDate     string "YYYY-MM-DD" ou null
+  priority    "high" | "medium" | "low" | null
   createdAt   timestamp
 
 config/allowlist
   emails      array de strings (e-mails autorizados, minúsculo)
   (documento único, editado manualmente pelo console — ver seção 3)
+
+users/{uid}/goals/{goalId}
+  title          string
+  description    string ou null
+  targetDate     string "YYYY-MM-DD" ou null
+  linkedHabitId  string (id do hábito) ou null
+  progress       number (0–100)
+  done           bool
+  createdAt      timestamp
+
+users/{uid}/focusSessions/{sessionId}
+  minutes      number
+  habitId      string ou null
+  habitName    string ou null
+  completedAt  timestamp
 ```
 
 Um dia "não marcado" simplesmente não tem documento em `logs` — é
@@ -259,6 +297,8 @@ js/panel-router.js      controla qual painel principal está visível
 js/overview.js          aba "Visão geral" (todos os hábitos juntos)
 js/tasks.js             aba "Tarefas" (to-do list com sub-itens)
 js/today.js             aba "Hoje" (painel do dia: hábitos + tarefas)
+js/timer.js             aba "Timer" (sessão de foco + histórico)
+js/goals.js             aba "Metas" (objetivos de longo prazo)
 js/mobile-nav.js        barra de abas fixa e menu "Mais" (celular/tablet)
 js/calendar.js          cálculo de datas, streak e renderização das 3 visões
 js/habits.js            lista de hábitos, modal de criar/editar, seleção

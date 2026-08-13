@@ -122,7 +122,7 @@ body{
 
 .is-hidden{ display:none !important; }
 button{ font-family: inherit; cursor:pointer; }
-input, select{ font-family: inherit; }
+input, select, textarea{ font-family: inherit; }
 
 /* =========================================================
    BOTÕES
@@ -325,38 +325,42 @@ input, select{ font-family: inherit; }
   font-size:9px; padding:1px 4px; line-height:1.3;
 }
 
-/* ---- mês ---- */
-.month-dow-row{ display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; max-width: 420px; margin-bottom:4px; }
-.month-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; max-width: 420px; }
-.month-dow{ font-size:10px; color: var(--text-faint); text-align:center; text-transform:uppercase; padding-bottom:4px; font-weight:600; }
+/* ---- mês: mesma largura da semana, quadrados grandes ---- */
+.month-dow-row{ display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; margin-bottom:6px; }
+.month-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; }
+.month-dow{ font-size:11px; color: var(--text-faint); text-align:center; text-transform:uppercase; padding-bottom:4px; font-weight:600; }
 .month-cell{
-  aspect-ratio: 1; border-radius: var(--radius-s); border:1px solid var(--border);
+  aspect-ratio: 1; border-radius: var(--radius-m); border:1px solid var(--border);
   background: var(--surface); display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:3px; cursor:pointer; position:relative;
+  gap:2px; cursor:pointer; position:relative;
 }
 .month-cell:hover{ border-color: var(--text-faint); }
-.month-cell.is-outside{ opacity:.25; pointer-events:none; }
+.month-cell.is-outside{ opacity:.3; pointer-events:none; }
+.month-cell.is-today{ box-shadow: inset 0 0 0 1.5px var(--accent); }
 .month-cell.is-today .month-cell-num{ color: var(--accent); font-weight:700; }
-.month-cell-num{ font-family: var(--font-mono); font-size:10px; color: var(--text-dim); }
-.month-stamp{ width:7px; height:7px; border-radius: 50%; }
-
-@media (max-width: 480px){
-  .month-grid, .month-dow-row{ gap:4px; max-width: 320px; }
-  .month-cell-num{ font-size:9px; }
-  .month-stamp{ width:5px; height:5px; }
+.month-cell-num{ font-family: var(--font-mono); font-size: clamp(10px, 2.6vw, 13px); color: var(--text-dim); }
+.month-stamp{ width:38%; height:38%; border-radius: 50%; }
+.month-stamp-count{
+  font-family: var(--font-mono); font-weight:700; font-size: clamp(9px, 2.2vw, 12px); line-height:1;
+  padding:2px 5px; border-radius:999px; color: var(--accent-ink);
 }
 
-/* ---- heatmap 6 meses ---- */
-.heatmap-wrap{ overflow-x:auto; padding-bottom:6px; }
-.heatmap-months{ display:flex; font-size:10.5px; color: var(--text-faint); margin-bottom:4px; margin-left:26px; }
-.heatmap-body{ display:flex; gap:3px; }
-.heatmap-dows{ display:grid; grid-template-rows: repeat(7, 12px); gap:3px; margin-right:6px; }
-.heatmap-dows span{ font-size:9px; color: var(--text-faint); height:12px; line-height:12px; }
-.heatmap-col{ display:grid; grid-template-rows: repeat(7, 12px); gap:3px; }
-.heatmap-cell{ width:12px; height:12px; border-radius:3px; background: var(--surface); border:1px solid var(--border); cursor:pointer; }
+/* ---- semestral (heatmap): mesma largura, grade real, sem scroll ---- */
+.heatmap-top{ display:flex; gap:8px; margin-bottom:4px; }
+.heatmap-top-spacer{ flex-shrink:0; width:20px; }
+.heatmap-months{ flex:1; display:grid; grid-auto-flow:column; grid-auto-columns:1fr; font-size:10.5px; color: var(--text-faint); }
+.heatmap-body{ display:flex; gap:8px; align-items:stretch; }
+.heatmap-dows{ display:flex; flex-direction:column; justify-content:space-between; flex-shrink:0; width:20px; }
+.heatmap-dows span{ font-size:9.5px; color: var(--text-faint); line-height:1; }
+.heatmap-grid{ flex:1; display:grid; grid-auto-flow:column; grid-auto-columns:1fr; grid-template-rows: repeat(7, auto); gap:3px; min-width:0; }
+.heatmap-cell{
+  width:100%; aspect-ratio:1; border-radius:3px; background: var(--surface);
+  border:1px solid var(--border); cursor:pointer; display:flex; align-items:center; justify-content:center;
+  font-family: var(--font-mono); font-weight:700; font-size: clamp(6.5px, 1vw, 9px); color: var(--accent-ink);
+}
 .heatmap-cell:hover{ outline: 1px solid var(--text-faint); }
 .heatmap-legend{ display:flex; align-items:center; gap:6px; margin-top:12px; font-size:11px; color: var(--text-faint); }
-.heatmap-legend .heatmap-cell{ cursor:default; }
+.heatmap-legend .heatmap-cell{ width:12px; height:12px; aspect-ratio:unset; cursor:default; }
 
 /* =========================================================
    MODAL (hábitos e configurações)
@@ -374,10 +378,11 @@ input, select{ font-family: inherit; }
 .modal-head h3{ font-family: var(--font-display); font-weight:700; margin:0; font-size:18px; letter-spacing:-.01em; }
 .modal-form{ display:flex; flex-direction:column; gap:14px; }
 .modal-form label{ display:flex; flex-direction:column; gap:6px; font-size:13px; color: var(--text-dim); }
-.modal-form input, .modal-form select{
+.modal-form input, .modal-form select, .modal-form textarea{
   background: var(--bg); border:1px solid var(--border); color: var(--text);
   border-radius: var(--radius-s); padding: 10px 12px; font-size:14px;
 }
+.modal-form textarea{ resize:vertical; }
 .field-row{ display:flex; gap:12px; }
 .field-row .grow{ flex:1; }
 
@@ -458,25 +463,11 @@ input, select{ font-family: inherit; }
 .overview-week-gap{ width:6px; flex-shrink:0; }
 .overview-empty{ color: var(--text-faint); font-size:13px; text-align:center; padding: 30px 0; }
 
-/* ---- Mensal / Semestral: um mini-heatmap por hábito ---- */
-.overview-heat-wrap{ display:flex; flex-direction:column; gap:24px; }
+/* ---- Mensal / Semestral: um mini-heatmap por hábito (reaproveita .heatmap-*) ---- */
+.overview-heat-wrap{ display:flex; flex-direction:column; gap:26px; }
 .overview-heat-header{ display:flex; align-items:center; gap:8px; margin-bottom:8px; }
-.overview-heat-grid-wrap{ display:flex; gap:6px; overflow-x:auto; padding-bottom:4px; }
-.overview-heat-dows{ display:flex; flex-direction:column; gap:3px; flex-shrink:0; }
-.overview-heat-dows span{ width:13px; height:13px; font-size:8.5px; color: var(--text-faint); line-height:13px; text-align:center; }
-.overview-heat-grid{ display:flex; gap:3px; }
-.overview-heat-col{ display:flex; flex-direction:column; gap:3px; flex-shrink:0; }
-.overview-heat-cell{
-  width:13px; height:13px; border-radius:3px; border:1px solid var(--border);
-  background: var(--surface); cursor:pointer; display:block;
-}
-.overview-heat-cell:hover{ outline:1px solid var(--text-faint); }
-.overview-heat-cell.is-today{ box-shadow: inset 0 0 0 1.5px var(--accent); }
-.overview-heat-cell.is-readonly{ cursor:default; opacity:.3; }
-
-@media (max-width: 480px){
-  .overview-heat-cell, .overview-heat-dows span{ width:11px; height:11px; }
-}
+.heatmap-cell.is-today{ box-shadow: inset 0 0 0 1.5px var(--accent); }
+.heatmap-cell.is-readonly{ cursor:default; opacity:.3; pointer-events:none; }
 
 @media (max-width: 480px){
   .overview-label{ width:120px; }
@@ -527,6 +518,30 @@ input, select{ font-family: inherit; }
   flex:1; background: var(--bg); border:1px solid var(--border); color: var(--text);
   border-radius:4px; padding:5px 8px; font-size:12.5px;
 }
+
+.task-title-wrap{ flex:1; display:flex; flex-direction:column; gap:3px; min-width:0; }
+.task-title-wrap .task-title{ flex:none; }
+.task-meta-row{ display:flex; flex-wrap:wrap; gap:5px; }
+.task-meta-chip{
+  font-size:10.5px; color: var(--text-faint); background: var(--surface-2);
+  padding:2px 7px; border-radius:999px; white-space:nowrap;
+}
+.task-meta-chip.is-overdue{ color: var(--rust-fg); background: var(--rust-bg); }
+
+.task-meta-editor{
+  border-top:1px solid var(--border); padding:12px 12px 12px 40px; display:flex; flex-direction:column; gap:10px;
+}
+.task-meta-editor label{ display:flex; flex-direction:column; gap:4px; font-size:12px; color: var(--text-dim); }
+.task-date-input{
+  background: var(--bg); border:1px solid var(--border); color: var(--text);
+  border-radius: var(--radius-s); padding:7px 10px; font-size:13px; max-width:200px;
+}
+.task-priority-picker{ display:flex; flex-wrap:wrap; gap:6px; }
+.task-priority-opt{
+  background: var(--bg); border:1px solid var(--border); color: var(--text-dim);
+  border-radius:999px; padding:6px 12px; font-size:12px;
+}
+.task-priority-opt.is-selected{ border-color: var(--accent); color: var(--text); background: var(--accent-soft); }
 
 /* =========================================================
    HOJE (dashboard)
@@ -587,6 +602,58 @@ input, select{ font-family: inherit; }
   flex-shrink:0;
 }
 .today-quit-badge.is-slipped{ background: var(--rust-bg); color: var(--rust-fg); border-color: var(--rust-bg); }
+
+.today-overdue-banner{
+  display:block; width:100%; text-align:left; margin-bottom:22px;
+  background: var(--rust-bg); border:1px solid var(--rust-bg); color: var(--rust-fg);
+  border-radius: var(--radius-m); padding:12px 16px; font-size:13.5px; font-weight:600;
+}
+.today-row.is-overdue-row{ border-left:3px solid var(--rust-fg); }
+
+/* =========================================================
+   TIMER
+   ========================================================= */
+.timer-panel{ display:flex; flex-direction:column; gap:16px; max-width:420px; margin-bottom:30px; }
+.timer-display{ text-align:center; padding:20px 0 6px; }
+.timer-time{ font-family: var(--font-mono); font-size:56px; font-weight:700; letter-spacing:-.02em; color: var(--text); }
+.timer-progress-track{ height:6px; border-radius:999px; background: var(--surface-2); margin-top:14px; overflow:hidden; }
+.timer-progress-fill{ height:100%; width:0%; background: var(--accent); border-radius:999px; transition: width 1s linear; }
+
+.timer-presets{ display:flex; flex-wrap:wrap; gap:8px; }
+.timer-preset{
+  background: var(--surface); border:1.5px solid var(--border); color: var(--text-dim);
+  border-radius:999px; padding:8px 14px; font-size:13px; font-weight:600;
+}
+.timer-preset.is-active{ border-color: var(--accent); color: var(--text); background: var(--accent-soft); }
+.timer-preset:disabled{ opacity:.5; }
+
+.timer-field{ display:flex; flex-direction:column; gap:6px; font-size:13px; color: var(--text-dim); }
+.timer-field input, .timer-field select{
+  background: var(--surface); border:1px solid var(--border); color: var(--text);
+  border-radius: var(--radius-s); padding:9px 12px; font-size:14px;
+}
+
+.timer-controls{ display:flex; gap:10px; }
+.timer-controls .btn{ flex:1; }
+
+/* =========================================================
+   METAS
+   ========================================================= */
+.goals-list{ display:flex; flex-direction:column; gap:12px; }
+.goal-card{
+  border:1px solid var(--border); border-radius: var(--radius-m); background: var(--surface);
+  padding:14px 16px;
+}
+.goal-card.is-done{ opacity:.6; }
+.goal-card-head{ display:flex; align-items:flex-start; gap:12px; }
+.goal-card-title-wrap{ flex:1; display:flex; flex-direction:column; gap:2px; min-width:0; }
+.goal-card-title{ font-size:14.5px; font-weight:600; color: var(--text); }
+.goal-card.is-done .goal-card-title{ text-decoration:line-through; color: var(--text-faint); }
+.goal-card-desc{ font-size:12.5px; color: var(--text-faint); }
+.goal-meta-row{ display:flex; flex-wrap:wrap; gap:6px; margin:10px 0 10px 38px; }
+.goal-progress-row{ display:flex; align-items:center; gap:10px; margin-left:38px; }
+.goal-progress-slider{ flex:1; accent-color: var(--accent); height:4px; }
+.goal-progress-value{ font-family: var(--font-mono); font-size:12px; color: var(--text-dim); width:36px; text-align:right; }
 
 /* =========================================================
    BARRA DE ABAS (mobile/tablet)

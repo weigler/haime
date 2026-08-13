@@ -98,6 +98,14 @@
         <span class="habit-dot overview-nav-dot">☑</span>
         <span class="habit-row-name">Tarefas</span>
       </button>
+      <button id="btn-timer" type="button" class="habit-row overview-nav-row">
+        <span class="habit-dot overview-nav-dot">⏱</span>
+        <span class="habit-row-name">Timer</span>
+      </button>
+      <button id="btn-goals" type="button" class="habit-row overview-nav-row">
+        <span class="habit-dot overview-nav-dot">◎</span>
+        <span class="habit-row-name">Metas</span>
+      </button>
 
       <div class="sidebar-group">
         <h2 class="sidebar-label">Construir</h2>
@@ -130,6 +138,8 @@
         </div>
 
         <div id="today-week-strip" class="today-week-strip"></div>
+
+        <button id="today-overdue-banner" type="button" class="today-overdue-banner is-hidden"></button>
 
         <div class="today-section">
           <div class="today-section-head">
@@ -222,6 +232,69 @@
         <div id="tasks-list" class="tasks-list"></div>
         <p id="tasks-empty" class="empty-hint is-hidden">Nenhuma tarefa por aqui. Adicione uma acima.</p>
       </div>
+
+      <div id="panel-timer" class="panel-habit is-hidden">
+        <div class="habit-header">
+          <div class="habit-title-row">
+            <span class="habit-icon overview-nav-dot" style="font-size:18px">⏱</span>
+            <div>
+              <h2>Timer</h2>
+              <p class="habit-meta">Uma sessão de foco, ligada a um hábito se você quiser</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="timer-panel">
+          <div class="timer-display">
+            <div id="timer-time" class="timer-time">25:00</div>
+            <div class="timer-progress-track"><div id="timer-progress-fill" class="timer-progress-fill"></div></div>
+          </div>
+
+          <div id="timer-presets" class="timer-presets">
+            <button type="button" class="timer-preset" data-min="5">5 min</button>
+            <button type="button" class="timer-preset" data-min="15">15 min</button>
+            <button type="button" class="timer-preset is-active" data-min="25">25 min</button>
+            <button type="button" class="timer-preset" data-min="45">45 min</button>
+            <button type="button" class="timer-preset" data-min="60">60 min</button>
+          </div>
+
+          <label class="timer-field">Personalizado (minutos)
+            <input type="number" id="timer-custom-min" min="1" max="240" placeholder="ex.: 90">
+          </label>
+
+          <label class="timer-field">Vincular a um hábito (opcional)
+            <select id="timer-habit-select"><option value="">Nenhum</option></select>
+          </label>
+
+          <div class="timer-controls">
+            <button type="button" id="timer-start" class="btn btn-primary">Iniciar</button>
+            <button type="button" id="timer-pause" class="btn btn-ghost is-hidden">Pausar</button>
+            <button type="button" id="timer-reset" class="btn btn-ghost">Reiniciar</button>
+          </div>
+        </div>
+
+        <div class="today-section">
+          <div class="today-section-head"><h3>Sessões recentes</h3></div>
+          <div id="timer-sessions-list" class="today-list"></div>
+          <p id="timer-sessions-empty" class="empty-hint is-hidden">Nenhuma sessão concluída ainda.</p>
+        </div>
+      </div>
+
+      <div id="panel-goals" class="panel-habit is-hidden">
+        <div class="habit-header">
+          <div class="habit-title-row">
+            <span class="habit-icon overview-nav-dot" style="font-size:18px">◎</span>
+            <div>
+              <h2>Metas</h2>
+              <p class="habit-meta">O panorama maior, além dos hábitos do dia a dia</p>
+            </div>
+          </div>
+          <button id="btn-new-goal" class="btn btn-accent btn-sm">+ Meta</button>
+        </div>
+
+        <div id="goals-list" class="goals-list"></div>
+        <p id="goals-empty" class="empty-hint is-hidden">Nenhuma meta ainda.<br>Toque em <strong>+ Meta</strong> para criar a primeira.</p>
+      </div>
     </main>
   </div>
 
@@ -242,6 +315,41 @@
   </nav>
 </section>
 
+<!-- ===== MODAL: NOVA/EDITAR META ===== -->
+<div id="goal-modal" class="modal-overlay is-hidden">
+  <div class="modal">
+    <div class="modal-head">
+      <h3 id="goal-modal-title">Nova meta</h3>
+      <button id="goal-modal-close" class="icon-btn">×</button>
+    </div>
+    <form id="goal-form" class="modal-form">
+      <label>Título
+        <input type="text" id="goal-field-title" required placeholder="Ex.: Correr uma maratona">
+      </label>
+      <label>Descrição (opcional)
+        <textarea id="goal-field-desc" rows="2" placeholder="Detalhes, por que essa meta importa…"></textarea>
+      </label>
+      <div class="field-row">
+        <label class="grow">Prazo (opcional)
+          <input type="date" id="goal-field-date">
+        </label>
+        <label class="grow">Vincular a um hábito (opcional)
+          <select id="goal-field-habit"><option value="">Nenhum</option></select>
+        </label>
+      </div>
+      <div class="modal-actions">
+        <div class="modal-actions-left">
+          <button type="button" id="goal-delete-btn" class="btn btn-danger is-hidden">Excluir</button>
+        </div>
+        <div class="modal-actions-right">
+          <button type="button" id="goal-cancel-btn" class="btn btn-ghost">Cancelar</button>
+          <button type="submit" class="btn btn-primary">Salvar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
 <!-- ===== MENU "MAIS" (mobile) ===== -->
 <div id="more-menu" class="modal-overlay is-hidden">
   <div class="modal more-menu-sheet">
@@ -251,6 +359,12 @@
     </div>
     <button id="more-menu-overview" type="button" class="more-menu-item">
       <span class="habit-dot overview-nav-dot">▦</span> Visão geral
+    </button>
+    <button id="more-menu-timer" type="button" class="more-menu-item">
+      <span class="habit-dot overview-nav-dot">⏱</span> Timer
+    </button>
+    <button id="more-menu-goals" type="button" class="more-menu-item">
+      <span class="habit-dot overview-nav-dot">◎</span> Metas
     </button>
     <button id="more-menu-settings" type="button" class="more-menu-item">
       <span class="habit-dot overview-nav-dot">⚙</span> Configurações
@@ -375,6 +489,8 @@
 <script type="module" src="js/overview.js"></script>
 <script type="module" src="js/tasks.js"></script>
 <script type="module" src="js/today.js"></script>
+<script type="module" src="js/timer.js"></script>
+<script type="module" src="js/goals.js"></script>
 <script type="module" src="js/habits.js"></script>
 <script type="module" src="js/mobile-nav.js"></script>
 <script type="module" src="js/backup.js"></script>

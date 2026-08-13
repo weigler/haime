@@ -1,7 +1,7 @@
 import { db } from "./firebase-config.js";
 import {
   collection, doc, addDoc, updateDoc, deleteDoc, setDoc, getDoc,
-  onSnapshot, query, orderBy, getDocs, serverTimestamp
+  onSnapshot, query, orderBy, limit, getDocs, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 // ------------------------------------------------------------
@@ -19,6 +19,12 @@ function logsCol(uid, habitId){
 }
 function tasksCol(uid){
   return collection(db, "users", uid, "tasks");
+}
+function goalsCol(uid){
+  return collection(db, "users", uid, "goals");
+}
+function focusCol(uid){
+  return collection(db, "users", uid, "focusSessions");
 }
 
 export function watchHabits(uid, callback){
@@ -130,6 +136,8 @@ export async function createTask(uid, title){
     title,
     done: false,
     items: [],
+    dueDate: null,
+    priority: null,
     createdAt: serverTimestamp()
   });
 }
@@ -140,4 +148,51 @@ export async function updateTask(uid, taskId, data){
 
 export async function deleteTask(uid, taskId){
   return deleteDoc(doc(db, "users", uid, "tasks", taskId));
+}
+
+// ------------------------------------------------------------
+// Metas (Goals) — objetivos de longo prazo, opcionalmente
+// vinculados a um hábito.
+// ------------------------------------------------------------
+export function watchGoals(uid, callback){
+  const q = query(goalsCol(uid), orderBy("createdAt", "asc"));
+  return onSnapshot(q, (snap) => {
+    const goals = [];
+    snap.forEach(d => goals.push({ id: d.id, ...d.data() }));
+    callback(goals);
+  });
+}
+
+export async function createGoal(uid, data){
+  return addDoc(goalsCol(uid), {
+    ...data,
+    done: false,
+    progress: 0,
+    createdAt: serverTimestamp()
+  });
+}
+
+export async function updateGoal(uid, goalId, data){
+  return updateDoc(doc(db, "users", uid, "goals", goalId), data);
+}
+
+export async function deleteGoal(uid, goalId){
+  return deleteDoc(doc(db, "users", uid, "goals", goalId));
+}
+
+// ------------------------------------------------------------
+// Sessões de foco (Timer) — histórico das últimas sessões
+// concluídas, opcionalmente vinculadas a um hábito.
+// ------------------------------------------------------------
+export function watchFocusSessions(uid, callback, max = 8){
+  const q = query(focusCol(uid), orderBy("completedAt", "desc"), limit(max));
+  return onSnapshot(q, (snap) => {
+    const sessions = [];
+    snap.forEach(d => sessions.push({ id: d.id, ...d.data() }));
+    callback(sessions);
+  });
+}
+
+export async function logFocusSession(uid, data){
+  return addDoc(focusCol(uid), { ...data, completedAt: serverTimestamp() });
 }

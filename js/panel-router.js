@@ -15,6 +15,8 @@ const panels = {
   overview: document.getElementById("panel-overview"),
   tasks: document.getElementById("panel-tasks"),
   today: document.getElementById("panel-today"),
+  timer: document.getElementById("panel-timer"),
+  goals: document.getElementById("panel-goals"),
 };
 
 const teardowns = {};

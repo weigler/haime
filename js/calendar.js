@@ -32,6 +32,17 @@ export function startOfWeek(d){
 
 export function startOfMonth(d){ return new Date(d.getFullYear(), d.getMonth(), 1); }
 
+// escolhe texto claro ou escuro conforme o brilho da cor de fundo,
+// pra "1x, 2x..." ficar legível em qualquer cor de hábito
+export function contrastText(hex){
+  const clean = (hex || "#4FA99A").replace("#", "");
+  const full = clean.length === 3 ? clean.split("").map(c => c+c).join("") : clean;
+  const num = parseInt(full, 16);
+  const r = (num >> 16) & 255, g = (num >> 8) & 255, b = num & 255;
+  const luminance = (0.299*r + 0.587*g + 0.114*b) / 255;
+  return luminance > 0.6 ? "#1a1a1a" : "#ffffff";
+}
+
 // ------------------------------------------------------------
 // Cálculo de sequência (streak)
 // ------------------------------------------------------------
@@ -69,7 +80,7 @@ export function computeStreak(habit, logs){
 // ------------------------------------------------------------
 // Semana
 // ------------------------------------------------------------
-export function renderWeek(container, habit, logs, refDate, onToggle){
+export function renderWeek(container, habit, logs, refDate, onToggle, onNavigate){
   const start = startOfWeek(refDate);
   const days = Array.from({length:7}, (_,i) => addDays(start, i));
   const tKey = todayKey();
@@ -109,7 +120,9 @@ export function renderWeek(container, habit, logs, refDate, onToggle){
   container.querySelectorAll("[data-nav]").forEach(btn => {
     btn.addEventListener("click", () => {
       const delta = parseInt(btn.dataset.nav, 10);
-      renderWeek(container, habit, logs, addDays(refDate, delta), onToggle);
+      const newDate = addDays(refDate, delta);
+      if(onNavigate) onNavigate(newDate);
+      renderWeek(container, habit, logs, newDate, onToggle, onNavigate);
     });
   });
 }
@@ -155,9 +168,12 @@ export function renderMonth(container, habit, logs, onToggle){
     const future = d > today;
     const cell = document.createElement("div");
     cell.className = "month-cell" + (key === tKey ? " is-today" : "") + (future ? " is-outside" : "");
+    const stampHtml = !filled ? "" : habit.type === "count"
+      ? `<span class="month-stamp-count" style="background:${habit.color};color:${contrastText(habit.color)}">${log.value}x</span>`
+      : `<span class="month-stamp" style="background:${habit.color}"></span>`;
     cell.innerHTML = `
       <span class="month-cell-num">${d.getDate()}</span>
-      ${filled ? `<span class="month-stamp" style="background:${habit.color}"></span>` : ""}
+      ${stampHtml}
     `;
     if(!future){
       cell.addEventListener("click", () => onToggle(key, log));
@@ -176,8 +192,9 @@ function formatRangeLabel(start, end){
 }
 
 // ------------------------------------------------------------
-// Semestral — matriz de 24 semanas (24x7 = 168 dias), cada
-// quadradinho é um dia (estilo "contribuições", semanas x dias).
+// Semestral — matriz de 24 semanas (24x7 = 168 dias). A grade
+// ocupa toda a largura disponível (igual às outras visões) e os
+// quadrados se ajustam ao espaço — sem precisar de rolagem lateral.
 // ------------------------------------------------------------
 export function renderHeatmap(container, habit, logs, onToggle){
   const today = new Date(); today.setHours(0,0,0,0);
@@ -192,14 +209,15 @@ export function renderHeatmap(container, habit, logs, onToggle){
   }
 
   container.innerHTML = `
-    <div class="heatmap-wrap">
+    <div class="heatmap-top">
+      <span class="heatmap-top-spacer"></span>
       <div class="heatmap-months" id="heatmap-months"></div>
-      <div class="heatmap-body">
-        <div class="heatmap-dows">
-          <span></span><span>Seg</span><span></span><span>Qua</span><span></span><span>Sex</span><span></span>
-        </div>
-        <div id="heatmap-cols" class="heatmap-body"></div>
+    </div>
+    <div class="heatmap-body">
+      <div class="heatmap-dows">
+        <span></span><span>Seg</span><span></span><span>Qua</span><span></span><span>Sex</span><span></span>
       </div>
+      <div id="heatmap-grid" class="heatmap-grid"></div>
     </div>
     <div class="heatmap-legend">
       <span>menos</span>
@@ -211,48 +229,50 @@ export function renderHeatmap(container, habit, logs, onToggle){
   `;
 
   const monthsRow = container.querySelector("#heatmap-months");
-  const cols = container.querySelector("#heatmap-cols");
+  const grid = container.querySelector("#heatmap-grid");
 
   let lastMonth = -1;
   weeks.forEach(week => {
-    const col = document.createElement("div");
-    col.className = "heatmap-col";
+    const firstDow = week[0];
+    const label = document.createElement("span");
+    if(firstDow.getMonth() !== lastMonth){
+      lastMonth = firstDow.getMonth();
+      label.textContent = MONTH_NAMES[firstDow.getMonth()].slice(0,3);
+    }
+    monthsRow.appendChild(label);
+
     week.forEach(d => {
       const key = toDateKey(d);
       const log = logs[key];
+      const filled = !!log && log.value > 0;
+      const future = d > today;
       const cell = document.createElement("div");
       cell.className = "heatmap-cell";
       cell.title = `${d.getDate()} ${MONTH_NAMES[d.getMonth()]}`;
-      if(d > today){
+
+      if(future){
         cell.style.opacity = "0.25";
         cell.style.pointerEvents = "none";
-      } else if(log && log.value > 0){
+      } else if(filled){
         const intensity = habit.type === "count" && habit.target
           ? Math.min(1, log.value / habit.target)
           : 1;
         cell.style.background = habit.color;
         cell.style.opacity = String(0.45 + intensity*0.55);
+        if(habit.type === "count"){
+          cell.textContent = `${log.value}x`;
+          cell.style.color = contrastText(habit.color);
+        }
       }
-      if(key === tKey) cell.style.outline = "1.5px solid var(--text-faint)";
-      cell.addEventListener("click", () => { if(d <= today) onToggle(key, log); });
-      if(habit.type === "count"){
-        cell.addEventListener("contextmenu", (e) => { e.preventDefault(); if(d <= today) onToggle(key, log, true); });
-      }
-      col.appendChild(cell);
-    });
-    cols.appendChild(col);
+      if(key === tKey) cell.style.boxShadow = "inset 0 0 0 1.5px var(--text-faint)";
 
-    const firstDow = week[0];
-    if(firstDow.getMonth() !== lastMonth){
-      lastMonth = firstDow.getMonth();
-      const label = document.createElement("span");
-      label.style.minWidth = "15px";
-      label.textContent = MONTH_NAMES[firstDow.getMonth()].slice(0,3);
-      monthsRow.appendChild(label);
-    } else {
-      const spacer = document.createElement("span");
-      spacer.style.minWidth = "15px";
-      monthsRow.appendChild(spacer);
-    }
+      if(!future){
+        cell.addEventListener("click", () => onToggle(key, log));
+        if(habit.type === "count"){
+          cell.addEventListener("contextmenu", (e) => { e.preventDefault(); onToggle(key, log, true); });
+        }
+      }
+      grid.appendChild(cell);
+    });
   });
 }
