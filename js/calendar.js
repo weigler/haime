@@ -156,7 +156,7 @@ export function renderMonth(container, habit, logs, refDate, onToggle){
     cell.className = "month-cell" + (outside ? " is-outside" : "") + (key === tKey ? " is-today" : "");
     cell.innerHTML = `
       <span class="month-cell-num">${d.getDate()}</span>
-      ${filled ? `<span class="month-stamp" style="background:${habit.color}33">${habit.icon}</span>` : ""}
+      ${filled ? `<span class="month-stamp" style="background:${habit.color}"></span>` : ""}
     `;
     if(!outside){
       cell.addEventListener("click", () => onToggle(key, log));

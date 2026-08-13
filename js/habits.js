@@ -1,5 +1,7 @@
 import { createHabit, updateHabit, deleteHabit, watchHabits, watchLogs, setLog } from "./db.js";
 import { renderWeek, renderMonth, renderHeatmap, computeStreak, todayKey } from "./calendar.js";
+import { showPanel, setActiveNav } from "./panel-router.js";
+import { teardownOverview } from "./overview.js";
 
 const ICONS = ["✅","💧","📖","🏃","🧘","💤","🙏","🥗","🚭","🍺","📵","💸","🧹","✍️","🎯","☕","🍬","🚬","🧠","🎸","🌱","🩺","🛏️","📵"];
 const COLORS = ["#4FA99A","#D2A84C","#C1573F","#6E9CD2","#9B7CD9","#5CB876","#D97D9C","#7A8790"];
@@ -17,8 +19,8 @@ let editingId = null;
 const listBuild = document.getElementById("list-build");
 const listQuit = document.getElementById("list-quit");
 const emptyHabits = document.getElementById("empty-habits");
-const panelEmpty = document.getElementById("panel-empty");
-const panelHabit = document.getElementById("panel-habit");
+const btnOverview = document.getElementById("btn-overview");
+const panelOverviewEl = document.getElementById("panel-overview");
 
 export function initHabits(userId){
   uid = userId;
@@ -30,15 +32,23 @@ export function initHabits(userId){
       selectedId = null;
     }
     if(selectedId){ renderSelected(); }
-    else { showEmptyPanel(); }
+    else if(panelOverviewEl.classList.contains("is-hidden")){ showEmptyPanel(); }
   });
 }
 
 export function teardownHabits(){
   if(habitsUnsub) habitsUnsub();
   if(logsUnsub) logsUnsub();
+  teardownOverview();
   habits = []; selectedId = null; currentLogs = {};
   listBuild.innerHTML = ""; listQuit.innerHTML = "";
+}
+
+// chamado pela aba "Visão geral" para tirar o foco de um hábito específico
+export function deselectHabit(){
+  selectedId = null;
+  if(logsUnsub){ logsUnsub(); logsUnsub = null; }
+  renderList();
 }
 
 function renderList(){
@@ -77,22 +87,23 @@ function selectHabit(id){
   selectedId = id;
   refDate = new Date();
   currentView = "week";
-  document.querySelectorAll(".view-tab").forEach(t => t.classList.toggle("is-active", t.dataset.view === "week"));
+  document.querySelectorAll(".view-tab[data-view]").forEach(t => t.classList.toggle("is-active", t.dataset.view === "week"));
+  teardownOverview();
+  btnOverview.classList.remove("is-active");
   renderList();
   renderSelected();
 }
 
 function showEmptyPanel(){
-  panelEmpty.classList.remove("is-hidden");
-  panelHabit.classList.add("is-hidden");
+  showPanel("empty");
 }
 
 function renderSelected(){
   const habit = habits.find(h => h.id === selectedId);
   if(!habit){ showEmptyPanel(); return; }
 
-  panelEmpty.classList.add("is-hidden");
-  panelHabit.classList.remove("is-hidden");
+  showPanel("habit");
+  setActiveNav(document.querySelector(`.habit-row[data-id="${habit.id}"]`));
 
   document.getElementById("habit-icon").textContent = habit.icon;
   document.getElementById("habit-icon").style.background = habit.color + "33";
@@ -157,10 +168,10 @@ async function handleToggle(habit, key, log, decrement){
   }
 }
 
-document.querySelectorAll(".view-tab").forEach(tab => {
+document.querySelectorAll(".view-tab[data-view]").forEach(tab => {
   tab.addEventListener("click", () => {
     currentView = tab.dataset.view;
-    document.querySelectorAll(".view-tab").forEach(t => t.classList.remove("is-active"));
+    document.querySelectorAll(".view-tab[data-view]").forEach(t => t.classList.remove("is-active"));
     tab.classList.add("is-active");
     const habit = habits.find(h => h.id === selectedId);
     if(habit) renderView(habit);

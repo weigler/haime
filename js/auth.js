@@ -14,17 +14,43 @@ const googleProvider = new GoogleAuthProvider();
 
 const authError = document.getElementById("auth-error");
 
+// ------------------------------------------------------------
+// Aviso automático para os dois problemas mais comuns ao testar:
+// 1) abrir o index.html direto do disco (file://) em vez de
+//    servir por http(s) — o Firebase Auth não funciona assim.
+// 2) o domínio atual não estar na lista de domínios autorizados
+//    do Firebase (Authentication → Settings → Authorized domains).
+// ------------------------------------------------------------
+if(location.protocol === "file:"){
+  authError.innerHTML =
+    "Este arquivo foi aberto direto do computador (file://). O login do Firebase " +
+    "só funciona servido por http/https — teste pelo link do GitHub Pages, ou rode " +
+    "um servidor local (ex.: <code>npx serve</code>) e abra por http://localhost.";
+}
+
 function showAuthError(err){
-  console.error(err);
+  console.error("[Haimë auth]", err);
   const map = {
     "auth/invalid-email": "E-mail inválido.",
     "auth/user-not-found": "Não achei essa conta. Confira o e-mail ou crie uma nova.",
     "auth/wrong-password": "Senha incorreta.",
     "auth/invalid-credential": "E-mail ou senha incorretos.",
     "auth/email-already-in-use": "Já existe uma conta com esse e-mail.",
-    "auth/weak-password": "A senha precisa ter pelo menos 6 caracteres."
+    "auth/weak-password": "A senha precisa ter pelo menos 6 caracteres.",
+    "auth/operation-not-allowed": "Esse método de login não está ativado no Firebase. Vá em Authentication → Sign-in method e ative E-mail/senha ou Google.",
+    "auth/unauthorized-domain": `Este domínio (${location.hostname}) não está autorizado no Firebase. Vá em Authentication → Settings → Authorized domains e adicione "${location.hostname}".`,
+    "auth/network-request-failed": "Falha de rede. Verifique sua internet e tente de novo.",
+    "auth/popup-blocked": "O navegador bloqueou o pop-up de login. Permita pop-ups para este site e tente de novo.",
+    "auth/popup-closed-by-user": "A janela de login do Google foi fechada antes de terminar.",
+    "auth/cancelled-popup-request": "Login cancelado — só uma janela de login pode ficar aberta por vez.",
+    "auth/web-storage-unsupported": "Este navegador (ou o modo privado/anônimo) está bloqueando cookies necessários para o login com Google.",
+    "auth/internal-error": "Erro interno do Firebase. Confira se o projeto e a apiKey em firebase-config.js estão corretos.",
+    "auth/configuration-not-found": "O provedor de login não está configurado no Firebase (ative em Authentication → Sign-in method)."
   };
-  authError.textContent = map[err.code] || "Algo deu errado. Tente de novo.";
+  const friendly = map[err.code];
+  authError.innerHTML = friendly
+    ? `${friendly}<br><span style="opacity:.6">(${err.code})</span>`
+    : `Algo deu errado: ${err.message || err.code || "erro desconhecido"}`;
 }
 
 // --- alternância entre abas Entrar / Criar conta ---
@@ -32,7 +58,7 @@ document.querySelectorAll(".auth-tab").forEach(tab => {
   tab.addEventListener("click", () => {
     document.querySelectorAll(".auth-tab").forEach(t => t.classList.remove("is-active"));
     tab.classList.add("is-active");
-    authError.textContent = "";
+    if(location.protocol !== "file:") authError.textContent = "";
     const isSignup = tab.dataset.tab === "signup";
     document.getElementById("signin-form").classList.toggle("is-hidden", isSignup);
     document.getElementById("signup-form").classList.toggle("is-hidden", !isSignup);
@@ -74,11 +100,18 @@ document.getElementById("google-signin").addEventListener("click", async () => {
 });
 
 async function ensureUserDoc(user){
-  await setDoc(doc(db, "users", user.uid), {
-    name: user.displayName || "",
-    email: user.email || "",
-    updatedAt: serverTimestamp()
-  }, { merge: true });
+  try{
+    await setDoc(doc(db, "users", user.uid), {
+      name: user.displayName || "",
+      email: user.email || "",
+      updatedAt: serverTimestamp()
+    }, { merge: true });
+  }catch(err){
+    // a conta já foi criada no Auth nesse ponto; um erro aqui costuma ser
+    // regra do Firestore ainda não publicada — avisamos sem desfazer o login
+    console.error("[Haimë auth] Falha ao gravar users/{uid}:", err);
+    showAuthError({ code: err.code, message: "Login funcionou, mas não consegui salvar seu perfil no Firestore — confira se as regras (firestore.rules) foram publicadas." });
+  }
 }
 
 export function watchAuth(onLogin, onLogout){

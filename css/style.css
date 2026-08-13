@@ -249,6 +249,10 @@ input, select{ font-family: inherit; }
 .habit-row-streak{ font-family: var(--font-mono); font-size:11px; color: var(--text-faint); }
 .empty-hint{ color: var(--text-faint); font-size:13px; text-align:center; margin-top:40px; line-height:1.6; }
 
+.overview-nav-row{ margin-bottom:16px; font-weight:600; }
+.overview-nav-dot{ background: var(--accent-soft); color: var(--accent); font-size:13px; }
+.habit-row.is-active .overview-nav-dot{ background: var(--accent); color: var(--accent-ink); }
+
 /* =========================================================
    PAINEL PRINCIPAL
    ========================================================= */
@@ -312,18 +316,24 @@ input, select{ font-family: inherit; }
 }
 
 /* ---- mês ---- */
-.month-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; }
-.month-dow{ font-size:10.5px; color: var(--text-faint); text-align:center; text-transform:uppercase; padding-bottom:6px; font-weight:600; }
+.month-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; max-width: 420px; }
+.month-dow{ font-size:10px; color: var(--text-faint); text-align:center; text-transform:uppercase; padding-bottom:4px; font-weight:600; }
 .month-cell{
   aspect-ratio: 1; border-radius: var(--radius-s); border:1px solid var(--border);
   background: var(--surface); display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:4px; cursor:pointer; position:relative;
+  gap:3px; cursor:pointer; position:relative;
 }
 .month-cell:hover{ border-color: var(--text-faint); }
 .month-cell.is-outside{ opacity:.25; pointer-events:none; }
 .month-cell.is-today .month-cell-num{ color: var(--accent); font-weight:700; }
-.month-cell-num{ font-family: var(--font-mono); font-size:11px; color: var(--text-dim); }
-.month-stamp{ width:16px; height:16px; border-radius: 50%; display:flex; align-items:center; justify-content:center; font-size:10px; }
+.month-cell-num{ font-family: var(--font-mono); font-size:10px; color: var(--text-dim); }
+.month-stamp{ width:7px; height:7px; border-radius: 50%; }
+
+@media (max-width: 480px){
+  .month-grid{ gap:4px; max-width: 320px; }
+  .month-cell-num{ font-size:9px; }
+  .month-stamp{ width:5px; height:5px; }
+}
 
 /* ---- heatmap 6 meses ---- */
 .heatmap-wrap{ overflow-x:auto; padding-bottom:6px; }
@@ -397,6 +407,7 @@ input, select{ font-family: inherit; }
 .palette-opt.is-active{ border-color: var(--accent); color: var(--text); }
 .palette-swatch-pair{ display:flex; width:100%; height:28px; border-radius: var(--radius-s); overflow:hidden; border:1px solid var(--border); }
 .palette-swatch-pair span{ flex:1; }
+.settings-hint{ font-size:12.5px; color: var(--text-faint); margin:0; line-height:1.5; }
 
 /* =========================================================
    TOAST
@@ -406,6 +417,40 @@ input, select{ font-family: inherit; }
   background: var(--surface); border:1px solid var(--border); color: var(--text);
   padding:10px 18px; border-radius: 999px; font-size:13px; z-index:200;
   box-shadow: var(--shadow-modal);
+}
+
+/* ---- Visão geral (todos os hábitos) ---- */
+.overview-scroll{ overflow-x:auto; padding-bottom:8px; }
+.overview-grid-wrap{ display:flex; flex-direction:column; gap:2px; min-width: fit-content; }
+.overview-row{ display:flex; align-items:center; gap:12px; }
+.overview-header{ padding-bottom:6px; margin-bottom:4px; border-bottom:1px solid var(--border); }
+.overview-label{
+  display:flex; align-items:center; gap:8px; width:170px; flex-shrink:0;
+}
+.overview-label-dot{
+  width:24px; height:24px; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-size:12px; flex-shrink:0;
+}
+.overview-label-name{ font-size:12.5px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.overview-cells{ display:flex; gap:4px; }
+.overview-col-label{
+  width:18px; text-align:center; font-size:9.5px; color: var(--text-faint); font-family: var(--font-mono); flex-shrink:0;
+}
+.overview-cell{
+  width:18px; height:18px; border-radius:5px; border:1px solid var(--border);
+  background: var(--surface); cursor:pointer; flex-shrink:0;
+}
+.overview-cell:hover{ outline:1px solid var(--text-faint); }
+.overview-cell.is-readonly{ cursor:default; }
+.overview-cell.is-today{ box-shadow: inset 0 0 0 1.5px var(--accent); }
+.overview-week-gap{ width:6px; flex-shrink:0; }
+.overview-empty{ color: var(--text-faint); font-size:13px; text-align:center; padding: 30px 0; }
+
+@media (max-width: 480px){
+  .overview-label{ width:120px; }
+  .overview-label-name{ font-size:11.5px; }
+  .overview-cell, .overview-col-label{ width:14px; }
+  .overview-cell{ height:14px; border-radius:4px; }
 }
 
 /* =========================================================

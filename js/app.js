@@ -1,5 +1,9 @@
 import { watchAuth, logout } from "./auth.js";
 import { initHabits, teardownHabits } from "./habits.js";
+import { initOverviewUid } from "./overview.js";
+import { initDataTools, teardownDataTools } from "./data-tools.js";
+import { runAutoBackupIfDue } from "./backup.js";
+import { showToast } from "./toast.js";
 
 const authScreen = document.getElementById("auth-screen");
 const appScreen = document.getElementById("app-screen");
@@ -14,11 +18,19 @@ watchAuth(
     userInitial.textContent = label.charAt(0).toUpperCase();
     userMenuBtn.title = user.displayName || user.email || "";
     initHabits(user.uid);
+    initOverviewUid(user.uid);
+    initDataTools(user.uid);
+
+    // backup automático (no máximo 1x por dia), silencioso em segundo plano
+    runAutoBackupIfDue(user.uid)
+      .then(ran => { if(ran) showToast("Backup automático do dia concluído."); })
+      .catch(err => console.error("Backup automático falhou:", err));
   },
   () => {
     authScreen.classList.remove("is-hidden");
     appScreen.classList.add("is-hidden");
     teardownHabits();
+    teardownDataTools();
   }
 );
 

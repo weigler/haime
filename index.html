@@ -93,6 +93,11 @@
 
     <!-- lista de hábitos -->
     <aside class="sidebar">
+      <button id="btn-overview" type="button" class="habit-row overview-nav-row">
+        <span class="habit-dot overview-nav-dot">▦</span>
+        <span class="habit-row-name">Visão geral</span>
+      </button>
+
       <div class="sidebar-group">
         <h2 class="sidebar-label">Construir</h2>
         <ul id="list-build" class="habit-list"></ul>
@@ -135,6 +140,28 @@
         <div id="view-week" class="view-body"></div>
         <div id="view-month" class="view-body is-hidden"></div>
         <div id="view-heatmap" class="view-body is-hidden"></div>
+      </div>
+
+      <div id="panel-overview" class="panel-habit is-hidden">
+        <div class="habit-header">
+          <div class="habit-title-row">
+            <span class="habit-icon overview-nav-dot" style="font-size:18px">▦</span>
+            <div>
+              <h2>Visão geral</h2>
+              <p class="habit-meta">Todos os hábitos, lado a lado</p>
+            </div>
+          </div>
+        </div>
+
+        <nav class="view-tabs">
+          <button class="view-tab is-active" data-oview="week">Semana</button>
+          <button class="view-tab" data-oview="month">4 semanas</button>
+          <button class="view-tab" data-oview="semester">Semestral</button>
+        </nav>
+
+        <div id="overview-week" class="view-body"></div>
+        <div id="overview-month" class="view-body is-hidden"></div>
+        <div id="overview-semester" class="view-body is-hidden"></div>
       </div>
     </main>
   </div>
@@ -221,16 +248,37 @@
       <span class="settings-label">Cor de fundo</span>
       <div id="palette-grid" class="palette-grid"></div>
     </div>
+
+    <div class="settings-section">
+      <span class="settings-label">Backup no Firestore</span>
+      <p id="backup-status" class="settings-hint">—</p>
+      <button type="button" id="btn-manual-backup" class="btn btn-ghost btn-sm">Fazer backup agora</button>
+    </div>
+
+    <div class="settings-section">
+      <span class="settings-label">Exportar</span>
+      <p class="settings-hint">Um relatório visual com o histórico de cada hábito, pra guardar ou imprimir.</p>
+      <button type="button" id="btn-export-pdf" class="btn btn-ghost btn-sm">Exportar relatório em PDF</button>
+    </div>
   </div>
 </div>
+
+<!-- gerador de PDF (usado só ao exportar o relatório) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <!-- Firebase SDK (modular, via CDN) -->
 <script type="module" src="js/firebase-config.js"></script>
 <script type="module" src="js/db.js"></script>
+<script type="module" src="js/toast.js"></script>
 <script type="module" src="js/settings.js"></script>
 <script type="module" src="js/auth.js"></script>
 <script type="module" src="js/calendar.js"></script>
+<script type="module" src="js/panel-router.js"></script>
+<script type="module" src="js/overview.js"></script>
 <script type="module" src="js/habits.js"></script>
+<script type="module" src="js/backup.js"></script>
+<script type="module" src="js/pdfexport.js"></script>
+<script type="module" src="js/data-tools.js"></script>
 <script type="module" src="js/app.js"></script>
 </body>
 </html>

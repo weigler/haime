@@ -1,6 +1,6 @@
 import { db } from "./firebase-config.js";
 import {
-  collection, doc, addDoc, updateDoc, deleteDoc, setDoc,
+  collection, doc, addDoc, updateDoc, deleteDoc, setDoc, getDoc,
   onSnapshot, query, orderBy, getDocs, serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -64,3 +64,36 @@ export async function setLog(uid, habitId, dateKey, value){
     await deleteDoc(ref);
   }
 }
+
+// ------------------------------------------------------------
+// Leituras avulsas (sem listener em tempo real) — usadas por
+// backup.js e pdfexport.js, que só precisam de uma "foto" atual.
+// ------------------------------------------------------------
+export async function getHabitsOnce(uid){
+  const snap = await getDocs(query(habitsCol(uid), orderBy("createdAt", "asc")));
+  const habits = [];
+  snap.forEach(d => habits.push({ id: d.id, ...d.data() }));
+  return habits;
+}
+
+export async function getLogsOnce(uid, habitId){
+  const snap = await getDocs(logsCol(uid, habitId));
+  const logs = {};
+  snap.forEach(d => { logs[d.id] = d.data(); });
+  return logs;
+}
+
+export async function writeBackupDoc(uid, backupId, data){
+  await setDoc(doc(db, "users", uid, "backups", backupId), data);
+}
+
+export async function getUserDoc(uid){
+  const snap = await getDoc(doc(db, "users", uid));
+  return snap.exists() ? snap.data() : null;
+}
+
+export async function updateUserDoc(uid, data){
+  await setDoc(doc(db, "users", uid), data, { merge: true });
+}
+
+export { serverTimestamp };
