@@ -208,13 +208,15 @@ function renderWeekGrid(container, weeks){
           <span class="overview-label-dot" style="background:${h.color}33;color:${h.color}">${h.icon}</span>
           <span class="overview-label-name">${escapeHtml(h.name)}</span>
         </div>
-        <div class="heatmap-top">
-          <span class="heatmap-top-spacer"></span>
-          <div class="heatmap-months">${monthLabels}</div>
-        </div>
-        <div class="heatmap-body">
-          <div class="heatmap-dows">${DOW_SHORT.map(d => `<span>${d[0]}</span>`).join("")}</div>
-          <div class="heatmap-grid">${cols}</div>
+        <div class="heatmap-scroll">
+          <div class="heatmap-top">
+            <span class="heatmap-top-spacer"></span>
+            <div class="heatmap-months">${monthLabels}</div>
+          </div>
+          <div class="heatmap-body">
+            <div class="heatmap-dows">${DOW_SHORT.map(d => `<span>${d[0]}</span>`).join("")}</div>
+            <div class="heatmap-grid">${cols}</div>
+          </div>
         </div>
       </div>`;
   }).join("");

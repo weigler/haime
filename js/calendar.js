@@ -209,15 +209,17 @@ export function renderHeatmap(container, habit, logs, onToggle){
   }
 
   container.innerHTML = `
-    <div class="heatmap-top">
-      <span class="heatmap-top-spacer"></span>
-      <div class="heatmap-months" id="heatmap-months"></div>
-    </div>
-    <div class="heatmap-body">
-      <div class="heatmap-dows">
-        <span></span><span>Seg</span><span></span><span>Qua</span><span></span><span>Sex</span><span></span>
+    <div class="heatmap-scroll">
+      <div class="heatmap-top">
+        <span class="heatmap-top-spacer"></span>
+        <div class="heatmap-months" id="heatmap-months"></div>
       </div>
-      <div id="heatmap-grid" class="heatmap-grid"></div>
+      <div class="heatmap-body">
+        <div class="heatmap-dows">
+          <span></span><span>Seg</span><span></span><span>Qua</span><span></span><span>Sex</span><span></span>
+        </div>
+        <div id="heatmap-grid" class="heatmap-grid"></div>
+      </div>
     </div>
     <div class="heatmap-legend">
       <span>menos</span>

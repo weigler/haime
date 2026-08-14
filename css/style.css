@@ -325,12 +325,17 @@ input, select, textarea{ font-family: inherit; }
   font-size:9px; padding:1px 4px; line-height:1.3;
 }
 
-/* ---- mês: mesma largura da semana, quadrados grandes ---- */
-.month-dow-row{ display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; margin-bottom:6px; max-width:520px; }
-.month-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; max-width:520px; }
+/* ---- mês e semestral: mesmo tamanho de quadrado nas duas,
+   travado por uma variável — só a largura total do bloco muda
+   (7 colunas vs 24), com rolagem lateral como rede de segurança
+   em telas bem pequenas ---- */
+:root{ --grid-cell: clamp(14px, 4vw, 24px); }
+
+.month-dow-row{ display:grid; grid-template-columns: repeat(7, var(--grid-cell)); gap:6px; margin-bottom:6px; width:fit-content; }
+.month-grid{ display:grid; grid-template-columns: repeat(7, var(--grid-cell)); gap:6px; width:fit-content; }
 .month-dow{ font-size:11px; color: var(--text-faint); text-align:center; text-transform:uppercase; padding-bottom:4px; font-weight:600; }
 .month-cell{
-  aspect-ratio: 1; border-radius: var(--radius-m); border:1px solid var(--border);
+  width: var(--grid-cell); aspect-ratio: 1; border-radius: var(--radius-m); border:1px solid var(--border);
   background: var(--surface); display:flex; flex-direction:column; align-items:center; justify-content:center;
   gap:2px; cursor:pointer; position:relative;
 }
@@ -338,25 +343,26 @@ input, select, textarea{ font-family: inherit; }
 .month-cell.is-outside{ opacity:.3; pointer-events:none; }
 .month-cell.is-today{ box-shadow: inset 0 0 0 1.5px var(--accent); }
 .month-cell.is-today .month-cell-num{ color: var(--accent); font-weight:700; }
-.month-cell-num{ font-family: var(--font-mono); font-size: clamp(10px, 2.6vw, 13px); color: var(--text-dim); }
+.month-cell-num{ font-family: var(--font-mono); font-size: clamp(8px, 2vw, 11px); color: var(--text-dim); }
 .month-stamp{ width:38%; height:38%; border-radius: 50%; }
 .month-stamp-count{
-  font-family: var(--font-mono); font-weight:700; font-size: clamp(9px, 2.2vw, 12px); line-height:1;
+  font-family: var(--font-mono); font-weight:700; font-size: clamp(7px, 1.6vw, 10px); line-height:1;
   padding:2px 5px; border-radius:999px; color: var(--accent-ink);
 }
 
-/* ---- semestral (heatmap): mesma largura, grade real, sem scroll ---- */
-.heatmap-top{ display:flex; gap:8px; margin-bottom:4px; max-width:560px; }
+/* ---- semestral (heatmap) ---- */
+.heatmap-scroll{ overflow-x:auto; padding-bottom:4px; }
+.heatmap-top{ display:flex; gap:8px; margin-bottom:4px; width:fit-content; }
 .heatmap-top-spacer{ flex-shrink:0; width:20px; }
-.heatmap-months{ flex:1; display:grid; grid-auto-flow:column; grid-auto-columns:1fr; font-size:10.5px; color: var(--text-faint); }
-.heatmap-body{ display:flex; gap:8px; align-items:stretch; max-width:560px; }
-.heatmap-dows{ display:flex; flex-direction:column; justify-content:space-between; flex-shrink:0; width:20px; }
-.heatmap-dows span{ font-size:9.5px; color: var(--text-faint); line-height:1; }
-.heatmap-grid{ flex:1; display:grid; grid-auto-flow:column; grid-auto-columns:1fr; grid-template-rows: repeat(7, auto); gap:3px; min-width:0; }
+.heatmap-months{ display:grid; grid-auto-flow:column; grid-auto-columns:var(--grid-cell); gap:3px; font-size:10.5px; color: var(--text-faint); }
+.heatmap-body{ display:flex; gap:8px; align-items:stretch; width:fit-content; }
+.heatmap-dows{ display:grid; grid-template-rows: repeat(7, var(--grid-cell)); gap:3px; flex-shrink:0; width:20px; }
+.heatmap-dows span{ font-size:9.5px; color: var(--text-faint); line-height:1; display:flex; align-items:center; }
+.heatmap-grid{ display:grid; grid-auto-flow:column; grid-auto-columns:var(--grid-cell); grid-template-rows: repeat(7, var(--grid-cell)); gap:3px; }
 .heatmap-cell{
-  width:100%; aspect-ratio:1; border-radius:3px; background: var(--surface);
+  width: var(--grid-cell); aspect-ratio:1; border-radius:3px; background: var(--surface);
   border:1px solid var(--border); cursor:pointer; display:flex; align-items:center; justify-content:center;
-  font-family: var(--font-mono); font-weight:700; font-size: clamp(6.5px, 1vw, 9px); color: var(--accent-ink);
+  font-family: var(--font-mono); font-weight:700; font-size: clamp(6.5px, 1.4vw, 9px); color: var(--accent-ink);
 }
 .heatmap-cell:hover{ outline: 1px solid var(--text-faint); }
 .heatmap-legend{ display:flex; align-items:center; gap:6px; margin-top:12px; font-size:11px; color: var(--text-faint); }
