@@ -217,6 +217,19 @@ prontos neste projeto — só troque se quiser um ícone diferente.
 
 ## Correções recentes
 
+- **Sequência de abandono com recaída retroativa**: bug real, achado
+  a partir de um caso real reportado (registrar consumo de dias
+  passados, antes mesmo de o hábito existir no app). A trava de "não
+  recua antes da criação" agora também considera o registro mais
+  antigo já feito, não só a data de criação — então marcar uma
+  recaída antiga não trava mais a contagem de dias limpos antes da
+  hora. 13 cenários testados, incluindo esse exato caso.
+- **Recorte de foto de perfil**: agora, ao escolher uma foto, abre um
+  recortador — arraste pra posicionar, use o zoom pra ajustar, veja
+  exatamente o que vai ser salvo dentro do círculo antes de
+  confirmar. Corrige o problema de fotos retangulares (principalmente
+  tiradas na horizontal) salvando esticadas/no formato errado.
+
 - **Sequência (streak) não contava os dias**: bug real, confirmado com
   14 testes automatizados. A trava que impedia a sequência de recuar
   antes da criação do hábito estava cortando um dia cedo demais —

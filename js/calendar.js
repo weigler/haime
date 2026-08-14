@@ -76,16 +76,24 @@ export function computeStreak(habit, logs){
   }
 
   let streak = 0;
-  // a trava de "não recua antes da criação" só faz sentido pra hábitos de
-  // abandonar: lá, "sem registro" sempre satisfaz a condição, então sem
-  // limite a sequência cresceria indefinidamente pra qualquer data, mesmo
-  // antes do hábito existir. Hábitos de construir não precisam dessa trava
-  // — cada dia contado exige um registro real (inclusive marcações
-  // retroativas legítimas), então já é naturalmente limitado.
-  const createdKey = habit.createdAt?.toDate ? toDateKey(habit.createdAt.toDate()) : null;
+  // pra hábitos de abandonar, o limite de quão longe a sequência pode
+  // recuar é a data mais antiga que a gente realmente conhece: a
+  // criação do hábito OU o registro (recaída) mais antigo já feito —
+  // o que vier primeiro. Sem isso, marcar retroativamente uma recaída
+  // antiga (ex.: registrar que usou em dias antes de começar a
+  // acompanhar no app) ficava presa atrás da data de criação, cortando
+  // a sequência de dias limpos cedo demais.
+  let quitBoundaryKey = null;
+  if(habit.goal === "quit"){
+    const createdKey = habit.createdAt?.toDate ? toDateKey(habit.createdAt.toDate()) : null;
+    const logKeys = Object.keys(logs);
+    const earliestLogKey = logKeys.length ? logKeys.reduce((min, k) => (k < min ? k : min), logKeys[0]) : null;
+    if(createdKey && earliestLogKey) quitBoundaryKey = createdKey < earliestLogKey ? createdKey : earliestLogKey;
+    else quitBoundaryKey = createdKey || earliestLogKey;
+  }
   while(satisfies(toDateKey(cursor))){
     streak++;
-    if(habit.goal === "quit" && createdKey && toDateKey(cursor) <= createdKey) break;
+    if(habit.goal === "quit" && quitBoundaryKey && toDateKey(cursor) <= quitBoundaryKey) break;
     cursor = addDays(cursor, -1);
     if(streak > 3650) break;
   }

@@ -513,6 +513,32 @@
   </div>
 </div>
 
+<!-- ===== MODAL: RECORTAR FOTO DE PERFIL ===== -->
+<div id="avatar-crop-modal" class="modal-overlay is-hidden">
+  <div class="modal avatar-crop-sheet">
+    <div class="modal-head">
+      <h3>Ajustar foto</h3>
+      <button id="avatar-crop-close" class="icon-btn">×</button>
+    </div>
+    <div class="avatar-crop-stage">
+      <canvas id="avatar-crop-canvas" width="320" height="320"></canvas>
+      <div class="avatar-crop-mask"></div>
+    </div>
+    <label class="avatar-crop-zoom">
+      <span>Zoom</span>
+      <input type="range" id="avatar-crop-zoom-input" min="100" max="300" value="100">
+    </label>
+    <p class="settings-hint">Arraste a imagem para posicionar dentro do círculo.</p>
+    <div class="modal-actions">
+      <div class="modal-actions-left"></div>
+      <div class="modal-actions-right">
+        <button type="button" id="avatar-crop-cancel" class="btn btn-ghost">Cancelar</button>
+        <button type="button" id="avatar-crop-save" class="btn btn-primary">Usar essa foto</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- gerador de PDF (usado só ao exportar o relatório) -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 

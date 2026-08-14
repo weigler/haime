@@ -466,6 +466,23 @@ input, select, textarea{ font-family: inherit; }
 .backup-row-label{ font-size:12.5px; color: var(--text-dim); }
 .backup-row-label strong{ color: var(--text); font-weight:600; }
 
+/* ---- Recorte de avatar ---- */
+.avatar-crop-sheet{ max-width:360px; }
+.avatar-crop-stage{
+  position:relative; width:280px; height:280px; margin:0 auto 16px;
+  border-radius: var(--radius-m); overflow:hidden; background: var(--bg); touch-action:none;
+}
+#avatar-crop-canvas{ width:100%; height:100%; cursor:grab; display:block; }
+#avatar-crop-canvas:active{ cursor:grabbing; }
+.avatar-crop-mask{
+  position:absolute; inset:0; pointer-events:none;
+  box-shadow: 0 0 0 9999px color-mix(in srgb, var(--bg) 72%, transparent);
+  border-radius:50%;
+  width:100%; height:100%;
+}
+.avatar-crop-zoom{ display:flex; align-items:center; gap:10px; font-size:12.5px; color: var(--text-dim); margin-bottom:6px; }
+.avatar-crop-zoom input{ flex:1; accent-color: var(--accent); }
+
 /* =========================================================
    TOAST
    ========================================================= */
