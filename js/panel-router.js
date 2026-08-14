@@ -19,12 +19,24 @@ const panels = {
   goals: document.getElementById("panel-goals"),
 };
 
+const layoutEl = document.querySelector(".layout");
+
 const teardowns = {};
 
 export function showPanel(which){
+  // qualquer troca de painel sai do modo "lista de hábitos em tela cheia"
+  // do celular — evita a barra lateral ficar presa em cima das outras abas
+  layoutEl.classList.remove("mobile-show-habits");
   Object.entries(panels).forEach(([key, el]) => {
     el.classList.toggle("is-hidden", key !== which);
   });
+}
+
+// usado pela aba "Hábitos" da barra de abas do celular/tablet: mostra a
+// lista em tela cheia, escondendo o painel principal até um hábito ser
+// escolhido (o que aciona showPanel de novo e sai desse modo).
+export function showMobileHabitsList(){
+  layoutEl.classList.add("mobile-show-habits");
 }
 
 export function setActiveNav(el){

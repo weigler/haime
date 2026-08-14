@@ -1,5 +1,5 @@
 import { enterToday } from "./today.js";
-import { showPanel, setActiveNav, teardownOthers } from "./panel-router.js";
+import { showPanel, showMobileHabitsList, setActiveNav, teardownOthers } from "./panel-router.js";
 
 const tabButtons = document.querySelectorAll(".mobile-tab");
 const moreMenu = document.getElementById("more-menu");
@@ -19,7 +19,7 @@ tabButtons.forEach(btn => {
       teardownOthers("habit");
       showPanel("empty");
       setActiveNav(null);
-      document.querySelector(".sidebar")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      showMobileHabitsList();
     } else if(tab === "tasks"){
       document.getElementById("btn-tasks").click();
     } else if(tab === "more"){

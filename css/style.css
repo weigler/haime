@@ -326,8 +326,8 @@ input, select, textarea{ font-family: inherit; }
 }
 
 /* ---- mês: mesma largura da semana, quadrados grandes ---- */
-.month-dow-row{ display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; margin-bottom:6px; }
-.month-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; }
+.month-dow-row{ display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; margin-bottom:6px; max-width:520px; }
+.month-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; max-width:520px; }
 .month-dow{ font-size:11px; color: var(--text-faint); text-align:center; text-transform:uppercase; padding-bottom:4px; font-weight:600; }
 .month-cell{
   aspect-ratio: 1; border-radius: var(--radius-m); border:1px solid var(--border);
@@ -346,10 +346,10 @@ input, select, textarea{ font-family: inherit; }
 }
 
 /* ---- semestral (heatmap): mesma largura, grade real, sem scroll ---- */
-.heatmap-top{ display:flex; gap:8px; margin-bottom:4px; }
+.heatmap-top{ display:flex; gap:8px; margin-bottom:4px; max-width:560px; }
 .heatmap-top-spacer{ flex-shrink:0; width:20px; }
 .heatmap-months{ flex:1; display:grid; grid-auto-flow:column; grid-auto-columns:1fr; font-size:10.5px; color: var(--text-faint); }
-.heatmap-body{ display:flex; gap:8px; align-items:stretch; }
+.heatmap-body{ display:flex; gap:8px; align-items:stretch; max-width:560px; }
 .heatmap-dows{ display:flex; flex-direction:column; justify-content:space-between; flex-shrink:0; width:20px; }
 .heatmap-dows span{ font-size:9.5px; color: var(--text-faint); line-height:1; }
 .heatmap-grid{ flex:1; display:grid; grid-auto-flow:column; grid-auto-columns:1fr; grid-template-rows: repeat(7, auto); gap:3px; min-width:0; }
@@ -691,7 +691,12 @@ input, select, textarea{ font-family: inherit; }
    ========================================================= */
 @media (max-width: 900px){
   .layout{ flex-direction:column; }
-  .sidebar{ width:100%; border-right:none; border-bottom:1px solid var(--border); max-height: 220px; }
+  .sidebar{ display:none; }
+  .layout.mobile-show-habits .sidebar{
+    display:flex; flex-direction:column; width:100%; flex:1; max-height:none;
+    border-right:none; overflow-y:auto;
+  }
+  .layout.mobile-show-habits .panel{ display:none; }
   .panel{ padding: 20px 16px 40px; }
   .week-grid{ gap:6px; }
   .day-stamp{ width:28px; height:28px; font-size:14px; }
