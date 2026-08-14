@@ -90,7 +90,7 @@ avatarInput.addEventListener("change", async () => {
       statusEl.textContent = "";
       return;
     }
-    await updateUserDoc(uid, { photoURL: dataUrl });
+    await withTimeout(updateUserDoc(uid, { photoURL: dataUrl }), 15000, "salvar foto");
     setAvatarPreview(dataUrl, nameInput.value);
     const userDoc = await getUserDoc(uid);
     applyTopbarIdentity(auth.currentUser, userDoc);
@@ -98,10 +98,18 @@ avatarInput.addEventListener("change", async () => {
     showToast("Foto de perfil atualizada.");
   }catch(err){
     console.error("[Haimë profile] falha ao salvar avatar:", err);
-    showToast("Não consegui salvar a foto agora.");
+    const timedOut = String(err?.message || "").startsWith("timeout:");
+    showToast(timedOut ? "Demorou demais pra salvar — confira sua internet e tente de novo." : "Não consegui salvar a foto agora.");
     statusEl.textContent = "";
   }
 });
+
+function withTimeout(promise, ms, label){
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(`timeout: ${label}`)), ms))
+  ]);
+}
 
 saveBtn.addEventListener("click", async () => {
   if(!uid || !auth.currentUser) return;
@@ -113,8 +121,10 @@ saveBtn.addEventListener("click", async () => {
   saveBtn.disabled = true;
   statusEl.textContent = "Salvando…";
   try{
-    await updateUserDoc(uid, { name });
-    await updateAuthProfile(auth.currentUser, { displayName: name });
+    // limite de 15s pra nunca ficar preso em "Salvando…" pra sempre,
+    // mesmo com internet ruim ou alguma falha silenciosa de rede
+    await withTimeout(updateUserDoc(uid, { name }), 15000, "salvar nome");
+    await withTimeout(updateAuthProfile(auth.currentUser, { displayName: name }), 15000, "atualizar perfil de login");
     setAvatarPreview((await getUserDoc(uid))?.photoURL || null, name);
     const userDoc = await getUserDoc(uid);
     applyTopbarIdentity(auth.currentUser, userDoc);
@@ -122,7 +132,8 @@ saveBtn.addEventListener("click", async () => {
     showToast("Nome de exibição atualizado.");
   }catch(err){
     console.error("[Haimë profile] falha ao salvar nome:", err);
-    showToast("Não consegui salvar o nome agora.");
+    const timedOut = String(err?.message || "").startsWith("timeout:");
+    showToast(timedOut ? "Demorou demais pra salvar — confira sua internet e tente de novo." : "Não consegui salvar o nome agora.");
     statusEl.textContent = "";
   }finally{
     saveBtn.disabled = false;

@@ -217,6 +217,25 @@ prontos neste projeto — só troque se quiser um ícone diferente.
 
 ## Correções recentes
 
+- **Sequência (streak) não contava os dias**: bug real, confirmado com
+  14 testes automatizados. A trava que impedia a sequência de recuar
+  antes da criação do hábito estava cortando um dia cedo demais —
+  inclusive excluindo o próprio dia em que o hábito foi criado, mesmo
+  com marcação válida nele. Como a maioria dos hábitos é recente,
+  isso afetava quase todo mundo. Corrigido: a trava agora só se aplica
+  a hábitos de abandonar (onde é realmente necessária), e compara
+  datas de calendário em vez de horários exatos.
+- **Perfil "trava" em Salvando…**: não consegui reproduzir isso nos
+  meus testes (salva em menos de 1s), mas adicionei um limite de 15s
+  de qualquer forma — se a gravação demorar mais que isso (rede ruim,
+  falha silenciosa), agora aparece um aviso claro em vez de ficar
+  preso pra sempre.
+- **Quadrados do Mês no iPhone**: retestei do zero, na largura exata
+  do iPhone, com o código atual — continua renderizando correto
+  (quadrados pequenos, rótulos D/S/T/Q/Q/S/S bem espaçados). Se ainda
+  estiver aparecendo errado depois de um recarregamento forçado, é
+  bem provável que a versão nova não tenha chegado ainda no
+  aparelho — veja "Solução de problemas" abaixo.
 - **Rótulos do Mês**: em telas estreitas, os rótulos de dia da semana
   (Dom/Seg/Ter...) vazavam por cima da coluna vizinha quando o
   quadrado ficava pequeno. Agora usam uma letra só (D S T Q Q S S),
@@ -224,9 +243,6 @@ prontos neste projeto — só troque se quiser um ícone diferente.
 - **Toque e segure**: hábitos de contagem agora aceitam "toque e
   segure" (~500ms) pra tirar uma marcação, além do clique direito no
   desktop — antes só funcionava com mouse.
-- **Sequência de hábitos a abandonar**: uma recaída registrada hoje
-  agora zera a sequência na hora, em vez de aplicar por engano a
-  tolerância de 1 dia pensada pra hábitos de construir.
 - **Timer em segundo plano**: o app tenta impedir a tela de travar
   sozinha enquanto uma sessão está rodando (Wake Lock API, quando o
   navegador suporta), e o cálculo do tempo restante se autocorrige

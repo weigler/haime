@@ -76,11 +76,17 @@ export function computeStreak(habit, logs){
   }
 
   let streak = 0;
+  // a trava de "não recua antes da criação" só faz sentido pra hábitos de
+  // abandonar: lá, "sem registro" sempre satisfaz a condição, então sem
+  // limite a sequência cresceria indefinidamente pra qualquer data, mesmo
+  // antes do hábito existir. Hábitos de construir não precisam dessa trava
+  // — cada dia contado exige um registro real (inclusive marcações
+  // retroativas legítimas), então já é naturalmente limitado.
+  const createdKey = habit.createdAt?.toDate ? toDateKey(habit.createdAt.toDate()) : null;
   while(satisfies(toDateKey(cursor))){
     streak++;
+    if(habit.goal === "quit" && createdKey && toDateKey(cursor) <= createdKey) break;
     cursor = addDays(cursor, -1);
-    // trava de segurança: não recua antes da criação do hábito
-    if(habit.createdAt?.toDate && cursor < habit.createdAt.toDate()) break;
     if(streak > 3650) break;
   }
   return streak;

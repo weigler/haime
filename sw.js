@@ -4,7 +4,7 @@
 // evita ficar preso numa versão antiga depois de uma atualização.
 // Chamadas ao Firebase e a CDNs externas passam direto, sem cache.
 
-const CACHE = "haime-v12";
+const CACHE = "haime-v13";
 const SHELL = [
   "./",
   "./index.html",
