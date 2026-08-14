@@ -347,6 +347,11 @@ input, select, textarea{ font-family: inherit; }
 .month-cell.is-today .month-cell-num{ color: var(--accent); font-weight:700; }
 .month-cell-num{ font-family: var(--font-mono); font-size: clamp(8px, 2vw, 11px); color: var(--text-dim); }
 .month-stamp{ width:38%; height:38%; border-radius: 50%; }
+.month-stamp-count{
+  width:65%; height:65%; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  font-family: var(--font-mono); font-weight:700; line-height:1;
+  font-size: clamp(6.5px, 1.5vw, 9px);
+}
 
 /* ---- semestral (heatmap) ---- */
 .heatmap-scroll{ overflow-x:auto; padding-bottom:4px; }

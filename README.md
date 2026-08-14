@@ -217,6 +217,20 @@ prontos neste projeto — só troque se quiser um ícone diferente.
 
 ## Correções recentes
 
+- **Recorte de avatar posicionado errado**: bug real, confirmado com
+  medição — o canvas de recorte tem resolução interna de 320px mas é
+  exibido na tela em 280px, e o arrasto usava pixels de tela
+  diretamente sem converter a escala. Cada pixel arrastado movia a
+  imagem ~14% a mais do que devia internamente, então a posição final
+  não batia com o que aparecia no preview. Corrigido: agora o
+  arrasto converte corretamente pixels de tela para pixels do canvas.
+- **"1x, 2x" de volta, sem cortar**: o selo do Mês usava um
+  preenchimento (padding) que sozinho já ocupava mais espaço que a
+  célula inteira no iPhone. Troquei pela mesma técnica que o
+  Semestral já usava (texto direto, sem preenchimento extra,
+  centralizado) — mostrei com medição que agora cabe com folga
+  nas três visões (Mês, Semestral e Visão Geral).
+
 - **Número truncado no Mês/Semestral (só no celular)**: bug real,
   confirmado com um hábito de contagem numa tela de largura de
   iPhone — a etiqueta "3x" media mais que a própria célula (18px

@@ -192,17 +192,14 @@ export function renderMonth(container, habit, logs, onToggle){
     const future = d > today;
     const cell = document.createElement("div");
     cell.className = "month-cell" + (key === tKey ? " is-today" : "") + (future ? " is-outside" : "");
-    // a célula é pequena demais pra caber texto tipo "3x" com folga em
-    // qualquer largura de tela (isso vazava/cortava no iPhone) — em vez
-    // disso, a intensidade da cor mostra "mais ou menos" pra hábitos de
-    // contagem, e o número exato fica visível na Semana e ao tocar aqui.
     let stampHtml = "";
     if(filled){
-      const intensity = habit.type === "count" && habit.target
-        ? Math.min(1, log.value / habit.target)
-        : 1;
-      const opacity = habit.type === "count" ? (0.45 + intensity*0.55).toFixed(2) : 1;
-      stampHtml = `<span class="month-stamp" style="background:${habit.color};opacity:${opacity}"></span>`;
+      if(habit.type === "count"){
+        const intensity = habit.target ? Math.min(1, log.value / habit.target) : 1;
+        stampHtml = `<span class="month-stamp-count" style="background:${habit.color};opacity:${(0.55+intensity*0.45).toFixed(2)};color:${contrastText(habit.color)}">${log.value}x</span>`;
+      } else {
+        stampHtml = `<span class="month-stamp" style="background:${habit.color}"></span>`;
+      }
     }
     cell.innerHTML = `
       <span class="month-cell-num">${d.getDate()}</span>
@@ -297,12 +294,10 @@ export function renderHeatmap(container, habit, logs, onToggle){
           ? Math.min(1, log.value / habit.target)
           : 1;
         cell.style.background = habit.color;
-        cell.style.opacity = String(0.45 + intensity*0.55);
-        // sem texto aqui de propósito — a célula é pequena demais pra
-        // caber "3x" com folga em qualquer largura de tela (é exatamente
-        // o que vazava/cortava no iPhone). O número exato fica no title
-        // (toque e segure ou hover) e, com espaço de sobra, na Semana.
+        cell.style.opacity = String(0.55 + intensity*0.45);
         if(habit.type === "count"){
+          cell.textContent = `${log.value}x`;
+          cell.style.color = contrastText(habit.color);
           cell.title = `${d.getDate()} ${MONTH_NAMES[d.getMonth()]} · ${log.value}${habit.target ? "/"+habit.target : ""}`;
         }
       }

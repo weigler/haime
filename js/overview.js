@@ -1,5 +1,5 @@
 import { watchHabits, watchLogs, setLog } from "./db.js";
-import { toDateKey, addDays, startOfWeek, todayKey, DOW_SHORT, MONTH_NAMES } from "./calendar.js";
+import { toDateKey, addDays, startOfWeek, todayKey, DOW_SHORT, MONTH_NAMES, contrastText } from "./calendar.js";
 import { showPanel, setActiveNav, registerTeardown, teardownOthers } from "./panel-router.js";
 import { bindCountTap } from "./interactions.js";
 
@@ -192,16 +192,18 @@ function renderWeekGrid(container, weeks){
       const isFuture = d > today;
       const isToday = key === tKey;
       let style = "";
+      let text = "";
       let titleSuffix = "";
-      // sem texto na célula — é pequena demais pra caber "3x" com folga
-      // em telas estreitas (vazava/cortava no iPhone). A intensidade da
-      // cor mostra "mais ou menos" e o número exato fica no title.
       if(filled){
         const intensity = h.type === "count" && h.target ? Math.min(1, log.value / h.target) : 1;
-        style = `background:${h.color};opacity:${(0.45 + intensity*0.55).toFixed(2)}`;
-        if(h.type === "count") titleSuffix = ` · ${log.value}${h.target ? "/"+h.target : ""}`;
+        style = `background:${h.color};opacity:${(0.55 + intensity*0.45).toFixed(2)}`;
+        if(h.type === "count"){
+          text = `${log.value}x`;
+          style += `;color:${contrastText(h.color)}`;
+          titleSuffix = ` · ${log.value}${h.target ? "/"+h.target : ""}`;
+        }
       }
-      return `<span class="heatmap-cell${isToday ? " is-today" : ""}${isFuture ? " is-readonly" : ""}" style="${style}" data-habit="${h.id}" data-date="${key}" title="${escapeHtml(h.name)} · ${d.getDate()}/${d.getMonth()+1}${titleSuffix}"></span>`;
+      return `<span class="heatmap-cell${isToday ? " is-today" : ""}${isFuture ? " is-readonly" : ""}" style="${style}" data-habit="${h.id}" data-date="${key}" title="${escapeHtml(h.name)} · ${d.getDate()}/${d.getMonth()+1}${titleSuffix}">${text}</span>`;
     }).join("")).join("");
 
     return `

@@ -187,8 +187,15 @@ function redrawCrop(){
 }
 
 function pointerPos(e){
-  if(e.touches && e.touches[0]) return { x: e.touches[0].clientX, y: e.touches[0].clientY };
-  return { x: e.clientX, y: e.clientY };
+  const raw = (e.touches && e.touches[0]) ? e.touches[0] : e;
+  // o canvas tem resolução interna de CANVAS_SIZE, mas é exibido na tela
+  // num tamanho CSS diferente (.avatar-crop-stage) — sem essa conversão,
+  // cada pixel arrastado na tela move a imagem numa proporção errada
+  // dentro do canvas, e a posição final não bate com o que se vê arrastando.
+  const rect = cropCanvas.getBoundingClientRect();
+  const scaleX = CANVAS_SIZE / rect.width;
+  const scaleY = CANVAS_SIZE / rect.height;
+  return { x: raw.clientX * scaleX, y: raw.clientY * scaleY };
 }
 
 function startDrag(e){
