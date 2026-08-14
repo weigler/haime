@@ -11,6 +11,10 @@ let selectedMinutes = 25;
 let remainingSeconds = 25 * 60;
 let running = false;
 let intervalId = null;
+let endAt = null; // timestamp absoluto (Date.now() + ms restantes) — é o que garante
+                   // que o timer "se corrige" sozinho mesmo se o navegador pausar o
+                   // setInterval em segundo plano ou com a tela travada.
+let wakeLock = null;
 
 const btnTimer = document.getElementById("btn-timer");
 const timeEl = document.getElementById("timer-time");
@@ -67,25 +71,32 @@ function setMinutes(min){
 
 btnStart.addEventListener("click", () => {
   running = true;
+  endAt = Date.now() + remainingSeconds * 1000;
   btnStart.classList.add("is-hidden");
   btnPause.classList.remove("is-hidden");
   presetsWrap.querySelectorAll(".timer-preset").forEach(b => b.disabled = true);
   customInput.disabled = true;
   habitSelect.disabled = true;
 
-  intervalId = setInterval(() => {
-    remainingSeconds--;
-    if(remainingSeconds <= 0){
-      finishSession();
-    } else {
-      render();
-    }
-  }, 1000);
+  requestWakeLock();
+  intervalId = setInterval(tick, 1000);
 });
+
+function tick(){
+  // recalcula a partir do horário absoluto — mesmo que o navegador tenha
+  // "pulado" alguns segundos (aba em segundo plano), o resultado fica certo.
+  remainingSeconds = Math.max(0, Math.round((endAt - Date.now()) / 1000));
+  if(remainingSeconds <= 0){
+    finishSession();
+  } else {
+    render();
+  }
+}
 
 btnPause.addEventListener("click", () => {
   running = false;
   clearInterval(intervalId);
+  releaseWakeLock();
   btnStart.classList.remove("is-hidden");
   btnStart.textContent = "Continuar";
   btnPause.classList.add("is-hidden");
@@ -94,7 +105,9 @@ btnPause.addEventListener("click", () => {
 btnReset.addEventListener("click", () => {
   running = false;
   clearInterval(intervalId);
+  releaseWakeLock();
   remainingSeconds = selectedMinutes * 60;
+  endAt = null;
   btnStart.classList.remove("is-hidden");
   btnStart.textContent = "Iniciar";
   btnPause.classList.add("is-hidden");
@@ -104,10 +117,40 @@ btnReset.addEventListener("click", () => {
   render();
 });
 
+// se a aba volta a ficar visível (usuário reabriu o app / destravou a tela),
+// recalcula o tempo restante na hora — o navegador pode ter pausado o
+// setInterval enquanto estava em segundo plano, então sem isso o timer
+// ficaria "parado" mostrando um valor desatualizado até o próximo tick.
+document.addEventListener("visibilitychange", () => {
+  if(document.visibilityState === "visible" && running && endAt){
+    tick();
+    requestWakeLock();
+  }
+});
+
+async function requestWakeLock(){
+  try{
+    if("wakeLock" in navigator){
+      wakeLock = await navigator.wakeLock.request("screen");
+    }
+  }catch(err){
+    // alguns navegadores negam (ex.: bateria fraca) — sem problema,
+    // o timer continua funcionando, só não impede a tela de travar
+    console.warn("[Haimë timer] wake lock indisponível:", err);
+  }
+}
+
+function releaseWakeLock(){
+  try{ wakeLock?.release(); }catch(err){ /* ignora */ }
+  wakeLock = null;
+}
+
 async function finishSession(){
   running = false;
   clearInterval(intervalId);
+  releaseWakeLock();
   remainingSeconds = 0;
+  endAt = null;
   render();
   playBeep();
   notify();

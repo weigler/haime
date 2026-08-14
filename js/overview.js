@@ -1,6 +1,7 @@
 import { watchHabits, watchLogs, setLog } from "./db.js";
 import { toDateKey, addDays, startOfWeek, todayKey, DOW_SHORT, MONTH_NAMES, contrastText } from "./calendar.js";
 import { showPanel, setActiveNav, registerTeardown, teardownOthers } from "./panel-router.js";
+import { bindCountTap } from "./interactions.js";
 
 let uid = null;
 let habitsUnsub = null;
@@ -227,11 +228,16 @@ function renderWeekGrid(container, weeks){
 
 function wireCells(container, selector = ".overview-cell"){
   container.querySelectorAll(`${selector}:not(.is-readonly)`).forEach(cell => {
-    cell.addEventListener("click", () => toggleCell(cell.dataset.habit, cell.dataset.date));
-    cell.addEventListener("contextmenu", (e) => {
-      const habit = habits.find(h => h.id === cell.dataset.habit);
-      if(habit?.type === "count"){ e.preventDefault(); toggleCell(cell.dataset.habit, cell.dataset.date, true); }
-    });
+    const habit = habits.find(h => h.id === cell.dataset.habit);
+    if(habit?.type === "count"){
+      bindCountTap(
+        cell,
+        () => toggleCell(cell.dataset.habit, cell.dataset.date),
+        () => toggleCell(cell.dataset.habit, cell.dataset.date, true)
+      );
+    } else {
+      cell.addEventListener("click", () => toggleCell(cell.dataset.habit, cell.dataset.date));
+    }
   });
 }
 

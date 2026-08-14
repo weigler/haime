@@ -15,12 +15,15 @@
 // armazenamento do plano gratuito.
 // ============================================================
 
-import { getHabitsOnce, getLogsOnce, writeBackupDoc, getUserDoc, updateUserDoc, serverTimestamp } from "./db.js";
+import { getHabitsOnceRaw, getLogsOnce, writeBackupDoc, listBackups, restoreHabitDoc, restoreLogDoc, getUserDoc, updateUserDoc, serverTimestamp } from "./db.js";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
 export async function buildSnapshot(uid){
-  const habits = await getHabitsOnce(uid);
+  // usa a versão "crua" (sem decifrar) — o backup precisa guardar
+  // exatamente o que está no banco, senão viraria uma porta dos
+  // fundos pra ler nomes cifrados em texto livre.
+  const habits = await getHabitsOnceRaw(uid);
   const data = {};
   for(const h of habits){
     const { createdAt, ...rest } = h;
@@ -60,6 +63,57 @@ export async function getLastBackupLabel(uid){
   const last = parseTimestamp(userDoc?.lastBackupAt);
   if(!last) return "Ainda não houve backup.";
   return `Último backup: ${last.toLocaleDateString("pt-BR")} às ${last.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"})}`;
+}
+
+// ------------------------------------------------------------
+// Lista os backups disponíveis (o automático + cada manual),
+// mais recente primeiro, com um rótulo pronto pra exibir.
+// ------------------------------------------------------------
+export async function getBackupList(uid){
+  const list = await listBackups(uid);
+  return list.map(b => {
+    const when = parseTimestamp(b.generatedAt);
+    const isAuto = b.id === "auto-latest";
+    const habitCount = Object.keys(b.habits || {}).length;
+    return {
+      id: b.id,
+      label: isAuto ? "Automático" : "Manual",
+      whenLabel: when
+        ? `${when.toLocaleDateString("pt-BR")} às ${when.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"})}`
+        : "data desconhecida",
+      habitCount,
+    };
+  });
+}
+
+// ------------------------------------------------------------
+// Restaura um backup: regrava cada hábito (com o mesmo id de
+// antes) e todas as marcações dele. Não apaga hábitos que não
+// estavam no backup — é um "mesclar de volta", não uma
+// substituição total, pra reduzir o risco de perder algo por
+// engano.
+// ------------------------------------------------------------
+export async function restoreFromBackup(uid, backupId, onProgress){
+  const backups = await listBackups(uid);
+  const backup = backups.find(b => b.id === backupId);
+  if(!backup) throw new Error("Backup não encontrado.");
+
+  const entries = Object.entries(backup.habits || {});
+  let done = 0;
+  for(const [habitId, entry] of entries){
+    const { habit, logs } = entry;
+    const restoredHabit = {
+      ...habit,
+      createdAt: habit?.createdAt ? new Date(habit.createdAt) : serverTimestamp(),
+    };
+    await restoreHabitDoc(uid, habitId, restoredHabit);
+    for(const [dateKey, log] of Object.entries(logs || {})){
+      await restoreLogDoc(uid, habitId, dateKey, log);
+    }
+    done++;
+    if(onProgress) onProgress(done, entries.length);
+  }
+  return entries.length;
 }
 
 function parseTimestamp(value){

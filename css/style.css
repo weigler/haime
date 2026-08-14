@@ -210,7 +210,9 @@ input, select, textarea{ font-family: inherit; }
 .user-chip{
   width:32px; height:32px; border-radius:50%; background: var(--surface-2);
   border:1px solid var(--border); color: var(--text); font-weight:600; font-size:13px;
+  overflow:hidden; display:flex; align-items:center; justify-content:center;
 }
+.user-chip img{ width:100%; height:100%; object-fit:cover; }
 
 .layout{ flex:1; display:flex; min-height:0; }
 
@@ -333,7 +335,7 @@ input, select, textarea{ font-family: inherit; }
 
 .month-dow-row{ display:grid; grid-template-columns: repeat(7, var(--grid-cell)); gap:6px; margin-bottom:6px; width:fit-content; }
 .month-grid{ display:grid; grid-template-columns: repeat(7, var(--grid-cell)); gap:6px; width:fit-content; }
-.month-dow{ font-size:11px; color: var(--text-faint); text-align:center; text-transform:uppercase; padding-bottom:4px; font-weight:600; }
+.month-dow{ font-size:10px; color: var(--text-faint); text-align:center; text-transform:uppercase; padding-bottom:4px; font-weight:600; overflow:hidden; }
 .month-cell{
   width: var(--grid-cell); aspect-ratio: 1; border-radius: var(--radius-m); border:1px solid var(--border);
   background: var(--surface); display:flex; flex-direction:column; align-items:center; justify-content:center;
@@ -431,6 +433,38 @@ input, select, textarea{ font-family: inherit; }
 .palette-swatch-pair{ display:flex; width:100%; height:28px; border-radius: var(--radius-s); overflow:hidden; border:1px solid var(--border); }
 .palette-swatch-pair span{ flex:1; }
 .settings-hint{ font-size:12.5px; color: var(--text-faint); margin:0; line-height:1.5; }
+
+/* ---- Perfil ---- */
+.profile-row{ display:flex; gap:14px; align-items:flex-start; }
+.profile-avatar{
+  position:relative; width:64px; height:64px; border-radius:50%; flex-shrink:0;
+  background: var(--accent-soft); border:1px solid var(--border); overflow:hidden;
+  display:flex; align-items:center; justify-content:center;
+}
+.profile-avatar img{ width:100%; height:100%; object-fit:cover; }
+#profile-avatar-initial{ font-family: var(--font-display); font-size:24px; font-weight:700; color: var(--accent); }
+.profile-avatar-edit{
+  position:absolute; bottom:-2px; right:-2px; width:22px; height:22px; border-radius:50%;
+  background: var(--accent); color: var(--accent-ink); font-size:11px;
+  display:flex; align-items:center; justify-content:center; border:2px solid var(--surface);
+}
+.profile-fields{ flex:1; display:flex; flex-direction:column; gap:10px; min-width:0; }
+.profile-fields label{ display:flex; flex-direction:column; gap:4px; font-size:12px; color: var(--text-dim); }
+.profile-fields input{
+  background: var(--bg); border:1px solid var(--border); color: var(--text);
+  border-radius: var(--radius-s); padding:8px 10px; font-size:13.5px;
+}
+.profile-fields input:disabled{ color: var(--text-faint); cursor:not-allowed; }
+.profile-actions{ display:flex; align-items:center; gap:10px; margin-top:12px; }
+
+/* ---- lista de backups restauráveis ---- */
+.backup-list{ display:flex; flex-direction:column; gap:6px; margin-top:10px; }
+.backup-row{
+  display:flex; align-items:center; justify-content:space-between; gap:10px;
+  padding:8px 10px; border:1px solid var(--border); border-radius: var(--radius-s); background: var(--bg);
+}
+.backup-row-label{ font-size:12.5px; color: var(--text-dim); }
+.backup-row-label strong{ color: var(--text); font-weight:600; }
 
 /* =========================================================
    TOAST

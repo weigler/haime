@@ -3,6 +3,7 @@
 // calendário (semana, mês, heatmap de 6 meses).
 // Tudo em fuso local (evita o clássico bug de "dia errado" do UTC).
 // ============================================================
+import { bindCountTap } from "./interactions.js";
 
 export const DOW_SHORT = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
 export const MONTH_NAMES = ["janeiro","fevereiro","março","abril","maio","junho",
@@ -61,9 +62,17 @@ export function computeStreak(habit, logs){
 
   // ponto de partida: hoje, com tolerância de 1 dia se hoje ainda não foi marcado
   let cursor = new Date(today);
-  if(!satisfies(toDateKey(cursor))){
-    cursor = addDays(cursor, -1);
+  if(habit.goal === "quit"){
+    // hábito de abandonar: um registro hoje é uma recaída confirmada —
+    // a sequência zera na hora, sem a tolerância de 1 dia.
     if(!satisfies(toDateKey(cursor))) return 0;
+  } else {
+    // hábito de construir: tolerância de 1 dia — talvez a pessoa ainda
+    // não tenha marcado hoje porque o dia não acabou.
+    if(!satisfies(toDateKey(cursor))){
+      cursor = addDays(cursor, -1);
+      if(!satisfies(toDateKey(cursor))) return 0;
+    }
   }
 
   let streak = 0;
@@ -109,10 +118,11 @@ export function renderWeek(container, habit, logs, refDate, onToggle, onNavigate
         ${filled && habit.type === "count" ? `<span class="day-count-badge">${log.value}${habit.target ? "/"+habit.target : ""}</span>` : ""}
       </span>
     `;
-    cell.addEventListener("click", () => onToggle(key, log));
     if(habit.type === "count"){
-      cell.addEventListener("contextmenu", (e) => { e.preventDefault(); onToggle(key, log, true); });
-      cell.title = "Clique para somar · clique direito para tirar";
+      bindCountTap(cell, () => onToggle(key, log), () => onToggle(key, log, true));
+      cell.title = "Toque para somar · clique direito ou toque e segure para tirar";
+    } else {
+      cell.addEventListener("click", () => onToggle(key, log));
     }
     grid.appendChild(cell);
   });
@@ -156,7 +166,7 @@ export function renderMonth(container, habit, logs, onToggle){
   DOW_SHORT.forEach(d => {
     const el = document.createElement("span");
     el.className = "month-dow";
-    el.textContent = d;
+    el.textContent = d[0];
     dowRow.appendChild(el);
   });
 
@@ -176,9 +186,10 @@ export function renderMonth(container, habit, logs, onToggle){
       ${stampHtml}
     `;
     if(!future){
-      cell.addEventListener("click", () => onToggle(key, log));
       if(habit.type === "count"){
-        cell.addEventListener("contextmenu", (e) => { e.preventDefault(); onToggle(key, log, true); });
+        bindCountTap(cell, () => onToggle(key, log), () => onToggle(key, log, true));
+      } else {
+        cell.addEventListener("click", () => onToggle(key, log));
       }
     }
     grid.appendChild(cell);
@@ -269,9 +280,10 @@ export function renderHeatmap(container, habit, logs, onToggle){
       if(key === tKey) cell.style.boxShadow = "inset 0 0 0 1.5px var(--text-faint)";
 
       if(!future){
-        cell.addEventListener("click", () => onToggle(key, log));
         if(habit.type === "count"){
-          cell.addEventListener("contextmenu", (e) => { e.preventDefault(); onToggle(key, log, true); });
+          bindCountTap(cell, () => onToggle(key, log), () => onToggle(key, log, true));
+        } else {
+          cell.addEventListener("click", () => onToggle(key, log));
         }
       }
       grid.appendChild(cell);

@@ -6,13 +6,14 @@ import { initTodayUid, teardownToday, enterToday } from "./today.js";
 import { initTimerUid, teardownTimer } from "./timer.js";
 import { initGoalsUid, teardownGoals } from "./goals.js";
 import { initDataTools, teardownDataTools } from "./data-tools.js";
+import { initProfileUid, applyTopbarIdentity } from "./profile.js";
+import { getUserDoc } from "./db.js";
 import { runAutoBackupIfDue } from "./backup.js";
 import { showToast } from "./toast.js";
 import { showPanel, setActiveNav } from "./panel-router.js";
 
 const authScreen = document.getElementById("auth-screen");
 const appScreen = document.getElementById("app-screen");
-const userInitial = document.getElementById("user-initial");
 const userMenuBtn = document.getElementById("btn-user-menu");
 
 watchAuth(
@@ -26,8 +27,6 @@ watchAuth(
 
     authScreen.classList.add("is-hidden");
     appScreen.classList.remove("is-hidden");
-    const label = (user.displayName || user.email || "?").trim();
-    userInitial.textContent = label.charAt(0).toUpperCase();
     userMenuBtn.title = user.displayName || user.email || "";
     initHabits(user.uid);
     initOverviewUid(user.uid);
@@ -36,7 +35,13 @@ watchAuth(
     initTimerUid(user.uid);
     initGoalsUid(user.uid);
     initDataTools(user.uid);
+    initProfileUid(user.uid);
     enterToday(); // tela inicial, como no app de referência
+
+    // aplica nome/foto salvos no chip do topo (cai pra inicial do e-mail se não tiver nada ainda)
+    getUserDoc(user.uid)
+      .then(userDoc => applyTopbarIdentity(user, userDoc))
+      .catch(() => applyTopbarIdentity(user, null));
 
     // backup automático (no máximo 1x por dia), silencioso em segundo plano
     runAutoBackupIfDue(user.uid)

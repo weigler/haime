@@ -2,6 +2,7 @@ import { watchHabits, watchLogs, setLog, watchTasks, updateTask } from "./db.js"
 import { toDateKey, addDays, startOfWeek, todayKey, computeStreak, DOW_SHORT } from "./calendar.js";
 import { showPanel, setActiveNav, registerTeardown, teardownOthers } from "./panel-router.js";
 import { sortTasks, isOverdue, PRIORITIES } from "./tasks.js";
+import { bindCountTap } from "./interactions.js";
 
 const WEEKDAY_FULL = ["Domingo","Segunda-feira","Terça-feira","Quarta-feira","Quinta-feira","Sexta-feira","Sábado"];
 const MONTH_FULL = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
@@ -186,9 +187,10 @@ function renderHabits(){
     `;
 
     const actionBtn = row.querySelector(".today-check, .today-count-btn, .today-quit-badge");
-    actionBtn.addEventListener("click", () => handleHabitAction(h, key, log));
     if(h.type === "count"){
-      actionBtn.addEventListener("contextmenu", (e) => { e.preventDefault(); handleHabitAction(h, key, log, true); });
+      bindCountTap(actionBtn, () => handleHabitAction(h, key, log), () => handleHabitAction(h, key, log, true));
+    } else {
+      actionBtn.addEventListener("click", () => handleHabitAction(h, key, log));
     }
 
     habitsListEl.appendChild(row);

@@ -26,6 +26,38 @@ GitHub Pages.
   dia a dia — título, descrição opcional, prazo opcional, e uma
   barra de progresso manual (0–100%). Pode vincular a meta a um
   hábito só como referência visual.
+- **Privacidade dos nomes**: os nomes de hábitos, tarefas (incluindo
+  sub-itens) e metas (título e descrição) ficam cifrados no
+  Firestore — quem abrir o documento direto no console vê só um
+  texto sem sentido tipo `encv1:Jp5V...`, não o conteúdo real. A
+  chave é derivada automaticamente do UID de cada pessoa, sem pedir
+  senha nenhuma — funciona sozinho, sem risco de perder acesso, e
+  não muda se a pessoa trocar o nome de exibição. **Importante**:
+  isso protege contra ver o conteúdo por acidente ao navegar pelos
+  dados — não é uma defesa contra um ataque deliberado por alguém
+  com acesso ao código-fonte e ao banco ao mesmo tempo. Números,
+  datas e progresso continuam em texto normal (não são muito
+  reveladores sozinhos, e cifrá-los quebraria ordenação/filtros).
+  Dados criados antes dessa proteção existir ficam em texto livre
+  até serem editados — ou até você clicar em "Cifrar dados
+  existentes" em Configurações → Privacidade, que cifra tudo que
+  ainda estiver pendente.
+- **Perfil**: em Configurações, defina um nome de exibição (usado no
+  topo do app e no chip de usuário) e uma foto opcional. O e-mail
+  aparece só como referência, sem opção de trocar por aqui — trocar
+  e-mail de login é uma operação sensível do Firebase Auth e fica de
+  fora por segurança; para isso, oriento a criar uma conta nova.
+  Sem Firebase Storage configurado, a foto é comprimida no navegador
+  (até ~160×160px) e guardada como texto no próprio documento do
+  usuário no Firestore — funciona bem para uma foto de perfil, mas
+  não é o ideal para imagens grandes.
+- **Restaurar backup**: em Configurações → Backup no Firestore, cada
+  backup salvo (automático ou manual) aparece numa lista com data e
+  quantidade de hábitos, com um botão "Restaurar". A restauração
+  regrava os hábitos e todo o histórico exatamente como estavam
+  naquele backup, mas não apaga hábitos criados depois — é um
+  "mesclar de volta", não uma substituição total, para reduzir risco
+  de perda por engano.
 - **Tarefas com prazo e prioridade**: cada tarefa pode ter uma
   data de vencimento e uma prioridade (Alta/Média/Baixa), editáveis
   pelo ícone 🗓 na linha da tarefa. A lista se reordena sozinha:
@@ -183,6 +215,29 @@ O `manifest.json` espera dois arquivos em `icons/`:
 `icon-192.png` (192×192) e `icon-512.png` (512×512). Eles já vêm
 prontos neste projeto — só troque se quiser um ícone diferente.
 
+## Correções recentes
+
+- **Rótulos do Mês**: em telas estreitas, os rótulos de dia da semana
+  (Dom/Seg/Ter...) vazavam por cima da coluna vizinha quando o
+  quadrado ficava pequeno. Agora usam uma letra só (D S T Q Q S S),
+  igual ao Semestral.
+- **Toque e segure**: hábitos de contagem agora aceitam "toque e
+  segure" (~500ms) pra tirar uma marcação, além do clique direito no
+  desktop — antes só funcionava com mouse.
+- **Sequência de hábitos a abandonar**: uma recaída registrada hoje
+  agora zera a sequência na hora, em vez de aplicar por engano a
+  tolerância de 1 dia pensada pra hábitos de construir.
+- **Timer em segundo plano**: o app tenta impedir a tela de travar
+  sozinha enquanto uma sessão está rodando (Wake Lock API, quando o
+  navegador suporta), e o cálculo do tempo restante se autocorrige
+  ao reabrir o app, mesmo se o navegador tiver pausado a contagem.
+  Isso não elimina 100% a limitação — nenhum site roda com a tela
+  travada — mas reduz bastante o problema.
+- **Cache mais confiável**: o service worker agora busca a versão
+  mais nova na rede primeiro, e só usa a cópia salva se estiver
+  offline (antes era o contrário, o que causava a sensação de
+  "atualizei mas não mudou nada").
+
 ## Solução de problemas: login/cadastro não funciona
 
 Se "Criar conta" não fizer nada visível ou der erro, siga esta
@@ -229,7 +284,10 @@ atualizados estão sempre em
 
 ```
 users/{uid}
-  name, email
+  name         string (nome de exibição)
+  email        string
+  photoURL     string (data URL da foto comprimida) ou ausente
+  lastBackupAt timestamp
 
 users/{uid}/habits/{habitId}
   name        string
@@ -305,6 +363,8 @@ js/habits.js            lista de hábitos, modal de criar/editar, seleção
 js/backup.js            backup automático (24h) e manual no Firestore
 js/pdfexport.js         relatório visual em PDF (usa jsPDF via CDN)
 js/data-tools.js        liga os botões de backup/PDF em Configurações
+js/profile.js           perfil: nome, e-mail (só leitura) e avatar
+js/crypto-fields.js      cifra/decifra nomes de hábitos/tarefas/metas (AES-GCM)
 js/app.js               liga tudo: autenticação → tela do app
 manifest.json, sw.js    PWA (instalação e cache básico offline)
 firestore.rules         regras de segurança (cole no console do Firebase)
