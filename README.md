@@ -217,6 +217,16 @@ prontos neste projeto — só troque se quiser um ícone diferente.
 
 ## Correções recentes
 
+- **Número truncado no Mês/Semestral (só no celular)**: bug real,
+  confirmado com um hábito de contagem numa tela de largura de
+  iPhone — a etiqueta "3x" media mais que a própria célula (18px
+  contra 15px disponíveis), então vazava por cima do número do dia.
+  A célula é pequena demais pra caber texto com folga em qualquer
+  tela estreita, então troquei por intensidade de cor (mais escuro =
+  mais próximo da meta) nessas duas visões. O número exato continua
+  visível na Semana (que tem espaço de sobra) e ao tocar/passar o
+  mouse em cima do quadradinho.
+
 - **Sequência de abandono com recaída retroativa**: bug real, achado
   a partir de um caso real reportado (registrar consumo de dias
   passados, antes mesmo de o hábito existir no app). A trava de "não

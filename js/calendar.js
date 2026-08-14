@@ -192,13 +192,25 @@ export function renderMonth(container, habit, logs, onToggle){
     const future = d > today;
     const cell = document.createElement("div");
     cell.className = "month-cell" + (key === tKey ? " is-today" : "") + (future ? " is-outside" : "");
-    const stampHtml = !filled ? "" : habit.type === "count"
-      ? `<span class="month-stamp-count" style="background:${habit.color};color:${contrastText(habit.color)}">${log.value}x</span>`
-      : `<span class="month-stamp" style="background:${habit.color}"></span>`;
+    // a célula é pequena demais pra caber texto tipo "3x" com folga em
+    // qualquer largura de tela (isso vazava/cortava no iPhone) — em vez
+    // disso, a intensidade da cor mostra "mais ou menos" pra hábitos de
+    // contagem, e o número exato fica visível na Semana e ao tocar aqui.
+    let stampHtml = "";
+    if(filled){
+      const intensity = habit.type === "count" && habit.target
+        ? Math.min(1, log.value / habit.target)
+        : 1;
+      const opacity = habit.type === "count" ? (0.45 + intensity*0.55).toFixed(2) : 1;
+      stampHtml = `<span class="month-stamp" style="background:${habit.color};opacity:${opacity}"></span>`;
+    }
     cell.innerHTML = `
       <span class="month-cell-num">${d.getDate()}</span>
       ${stampHtml}
     `;
+    if(filled && habit.type === "count"){
+      cell.title = `${log.value}${habit.target ? "/"+habit.target : ""}`;
+    }
     if(!future){
       if(habit.type === "count"){
         bindCountTap(cell, () => onToggle(key, log), () => onToggle(key, log, true));
@@ -286,9 +298,12 @@ export function renderHeatmap(container, habit, logs, onToggle){
           : 1;
         cell.style.background = habit.color;
         cell.style.opacity = String(0.45 + intensity*0.55);
+        // sem texto aqui de propósito — a célula é pequena demais pra
+        // caber "3x" com folga em qualquer largura de tela (é exatamente
+        // o que vazava/cortava no iPhone). O número exato fica no title
+        // (toque e segure ou hover) e, com espaço de sobra, na Semana.
         if(habit.type === "count"){
-          cell.textContent = `${log.value}x`;
-          cell.style.color = contrastText(habit.color);
+          cell.title = `${d.getDate()} ${MONTH_NAMES[d.getMonth()]} · ${log.value}${habit.target ? "/"+habit.target : ""}`;
         }
       }
       if(key === tKey) cell.style.boxShadow = "inset 0 0 0 1.5px var(--text-faint)";
