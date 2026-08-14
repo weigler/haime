@@ -193,16 +193,21 @@ export function renderMonth(container, habit, logs, onToggle){
     const cell = document.createElement("div");
     cell.className = "month-cell" + (key === tKey ? " is-today" : "") + (future ? " is-outside" : "");
     let stampHtml = "";
+    let numStyle = "";
     if(filled){
+      const ink = contrastText(habit.color);
+      numStyle = ` style="color:${ink}"`;
       if(habit.type === "count"){
         const intensity = habit.target ? Math.min(1, log.value / habit.target) : 1;
-        stampHtml = `<span class="month-stamp-count" style="background:${habit.color};opacity:${(0.55+intensity*0.45).toFixed(2)};color:${contrastText(habit.color)}">${log.value}x</span>`;
+        stampHtml = `
+          <span class="month-stamp" style="background:${habit.color};opacity:${(0.55+intensity*0.45).toFixed(2)}"></span>
+          <span class="month-stamp-count" style="background:${habit.color};color:${ink}">${log.value}x</span>`;
       } else {
         stampHtml = `<span class="month-stamp" style="background:${habit.color}"></span>`;
       }
     }
     cell.innerHTML = `
-      <span class="month-cell-num">${d.getDate()}</span>
+      <span class="month-cell-num"${numStyle}>${d.getDate()}</span>
       ${stampHtml}
     `;
     if(filled && habit.type === "count"){

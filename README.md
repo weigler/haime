@@ -217,6 +217,18 @@ prontos neste projeto — só troque se quiser um ícone diferente.
 
 ## Correções recentes
 
+- **Número do dia sumindo no Mês por hábito**: o selo de contagem
+  ("2x") tinha ficado grande demais e cobria o número do dia por
+  cima — em telas maiores (PC), não só no celular. Redesenhado: o
+  número agora fica fixo no canto superior esquerdo, o preenchimento
+  colorido cobre a célula toda, e o selo de contagem fica num
+  cantinho oposto — as três informações continuam visíveis, mesmo
+  numa célula de 24px.
+- **Aba "6 meses" desatualizada**: renomeada para "Semestral" na
+  visão por hábito, igual já era na Visão Geral.
+- **"1x/2x" faltando na Semana da Visão Geral**: essa visão nunca
+  tinha ganhado os números, só Mês e Semestral. Adicionado.
+
 - **Recorte de avatar posicionado errado**: bug real, confirmado com
   medição — o canvas de recorte tem resolução interna de 320px mas é
   exibido na tela em 280px, e o arrasto usava pixels de tela

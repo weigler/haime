@@ -338,19 +338,23 @@ input, select, textarea{ font-family: inherit; }
 .month-dow{ font-size:10px; color: var(--text-faint); text-align:center; text-transform:uppercase; padding-bottom:4px; font-weight:600; overflow:hidden; }
 .month-cell{
   width: var(--grid-cell); aspect-ratio: 1; border-radius: var(--radius-m); border:1px solid var(--border);
-  background: var(--surface); display:flex; flex-direction:column; align-items:center; justify-content:center;
-  gap:2px; cursor:pointer; position:relative;
+  background: var(--surface); position:relative; cursor:pointer; overflow:hidden;
 }
 .month-cell:hover{ border-color: var(--text-faint); }
 .month-cell.is-outside{ opacity:.3; pointer-events:none; }
 .month-cell.is-today{ box-shadow: inset 0 0 0 1.5px var(--accent); }
 .month-cell.is-today .month-cell-num{ color: var(--accent); font-weight:700; }
-.month-cell-num{ font-family: var(--font-mono); font-size: clamp(8px, 2vw, 11px); color: var(--text-dim); }
-.month-stamp{ width:38%; height:38%; border-radius: 50%; }
+.month-cell-num{
+  position:absolute; top:2px; left:3px; z-index:2;
+  font-family: var(--font-mono); font-size: clamp(7px, 1.8vw, 10px); color: var(--text-dim);
+}
+.month-stamp{ position:absolute; inset:0; z-index:0; }
 .month-stamp-count{
-  width:65%; height:65%; border-radius:50%; display:flex; align-items:center; justify-content:center;
+  position:absolute; bottom:1px; right:1px; z-index:2;
+  min-width:11px; height:11px; padding:0 2px; border-radius:999px; display:flex; align-items:center; justify-content:center;
   font-family: var(--font-mono); font-weight:700; line-height:1;
-  font-size: clamp(6.5px, 1.5vw, 9px);
+  font-size: clamp(5.5px, 1.1vw, 7px);
+  box-shadow: 0 0 0 1.5px var(--surface);
 }
 
 /* ---- semestral (heatmap) ---- */
@@ -514,6 +518,8 @@ input, select, textarea{ font-family: inherit; }
 .overview-cell{
   width:18px; height:18px; border-radius:5px; border:1px solid var(--border);
   background: var(--surface); cursor:pointer; flex-shrink:0;
+  display:flex; align-items:center; justify-content:center;
+  font-family: var(--font-mono); font-weight:700; font-size:8.5px; line-height:1;
 }
 .overview-cell:hover{ outline:1px solid var(--text-faint); }
 .overview-cell.is-readonly{ cursor:default; opacity:.35; }

@@ -117,9 +117,17 @@ function renderWeekStrip(container){
       const filled = !!log && log.value > 0;
       const isToday = key === tKey;
       const isFuture = d > new Date();
-      const style = filled ? `background:${h.color};border-color:${h.color}` : "";
+      let style = "";
+      let text = "";
+      if(filled){
+        style = `background:${h.color};border-color:${h.color}`;
+        if(h.type === "count"){
+          text = `${log.value}x`;
+          style += `;color:${contrastText(h.color)}`;
+        }
+      }
       const readonly = isFuture ? " is-readonly" : "";
-      return `<span class="overview-cell${isToday ? " is-today" : ""}${readonly}" style="${style}" data-habit="${h.id}" data-date="${key}" title="${escapeHtml(h.name)} · ${d.getDate()}/${d.getMonth()+1}"></span>`;
+      return `<span class="overview-cell${isToday ? " is-today" : ""}${readonly}" style="${style}" data-habit="${h.id}" data-date="${key}" title="${escapeHtml(h.name)} · ${d.getDate()}/${d.getMonth()+1}">${text}</span>`;
     }).join("");
     return `
       <div class="overview-row">
