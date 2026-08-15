@@ -159,94 +159,19 @@ function formatWeekLabel(start){
 }
 
 // ------------------------------------------------------------
-// Mês — matriz de 4 semanas (4x7 = 28 dias), sempre as mais
-// recentes até hoje. Sem navegação: é uma janela "rolante".
-// Mesma orientação do Semestral/Visão Geral: semanas em colunas,
-// dias da semana em linhas.
+// Mês e Semestral — a mesma grade (semanas em colunas, dias da
+// semana em linhas, sem número do dia, dias futuros desabilitados
+// e esmaecidos — igual à Visão Geral), só muda a quantidade de
+// semanas: 6 no Mês, 24 no Semestral.
 // ------------------------------------------------------------
-export function renderMonth(container, habit, logs, onToggle){
-  const currentWeekStart = startOfWeek(new Date());
-  const start = addDays(currentWeekStart, -21); // 4 semanas, começando pela mais antiga
-  const weeks = Array.from({length:4}, (_,w) => {
-    const weekStart = addDays(start, w*7);
-    return Array.from({length:7}, (_,i) => addDays(weekStart, i));
-  });
-  const tKey = todayKey();
-  const today = new Date(); today.setHours(0,0,0,0);
-
-  container.innerHTML = `
-    <div class="range-nav range-nav-static">
-      <span class="range-nav-label">${formatRangeLabel(start, addDays(start, 27))}</span>
-    </div>
-    <div class="heatmap-body">
-      <div class="heatmap-dows">
-        <span></span><span>Seg</span><span></span><span>Qua</span><span></span><span>Sex</span><span></span>
-      </div>
-      <div class="heatmap-grid" id="month-grid"></div>
-    </div>
-  `;
-
-  const grid = container.querySelector("#month-grid");
-  weeks.forEach(week => {
-    week.forEach(d => {
-      const key = toDateKey(d);
-      const log = logs[key];
-      const filled = !!log && log.value > 0;
-      const future = d > today;
-      const cell = document.createElement("div");
-      cell.className = "month-cell" + (key === tKey ? " is-today" : "") + (future ? " is-outside" : "");
-      let stampHtml = "";
-      let numStyle = "";
-      if(filled){
-        const ink = contrastText(habit.color);
-        numStyle = ` style="color:${ink}"`;
-        if(habit.type === "count"){
-          const intensity = habit.target ? Math.min(1, log.value / habit.target) : 1;
-          stampHtml = `
-            <span class="month-stamp" style="background:${habit.color};opacity:${(0.55+intensity*0.45).toFixed(2)}"></span>
-            <span class="month-stamp-count" style="background:${habit.color};color:${ink}">${log.value}x</span>`;
-        } else {
-          stampHtml = `<span class="month-stamp" style="background:${habit.color}"></span>`;
-        }
-      }
-      cell.innerHTML = `
-        <span class="month-cell-num"${numStyle}>${d.getDate()}</span>
-        ${stampHtml}
-      `;
-      if(filled && habit.type === "count"){
-        cell.title = `${log.value}${habit.target ? "/"+habit.target : ""}`;
-      }
-      if(!future){
-        if(habit.type === "count"){
-          bindCountTap(cell, () => onToggle(key, log), () => onToggle(key, log, true));
-        } else {
-          cell.addEventListener("click", () => onToggle(key, log));
-        }
-      }
-      grid.appendChild(cell);
-    });
-  });
-}
-
-function formatRangeLabel(start, end){
-  const sameMonth = start.getMonth() === end.getMonth();
-  const startStr = sameMonth ? `${start.getDate()}` : `${start.getDate()} ${MONTH_NAMES[start.getMonth()].slice(0,3)}`;
-  return `${startStr} – ${end.getDate()} ${MONTH_NAMES[end.getMonth()]} ${end.getFullYear()}`;
-}
-
-// ------------------------------------------------------------
-// Semestral — matriz de 24 semanas (24x7 = 168 dias). A grade
-// ocupa toda a largura disponível (igual às outras visões) e os
-// quadrados se ajustam ao espaço — sem precisar de rolagem lateral.
-// ------------------------------------------------------------
-export function renderHeatmap(container, habit, logs, onToggle){
+function renderWeeksGrid(container, habit, logs, onToggle, weekCount){
   const today = new Date(); today.setHours(0,0,0,0);
   const end = startOfWeek(today);
-  const start = addDays(end, -23*7); // 24 semanas
+  const start = addDays(end, -(weekCount-1)*7);
   const tKey = todayKey();
 
   const weeks = [];
-  for(let w=0; w<24; w++){
+  for(let w=0; w<weekCount; w++){
     const weekStart = addDays(start, w*7);
     weeks.push(Array.from({length:7}, (_,i) => addDays(weekStart, i)));
   }
@@ -322,4 +247,12 @@ export function renderHeatmap(container, habit, logs, onToggle){
       grid.appendChild(cell);
     });
   });
+}
+
+export function renderMonth(container, habit, logs, onToggle){
+  renderWeeksGrid(container, habit, logs, onToggle, 6);
+}
+
+export function renderHeatmap(container, habit, logs, onToggle){
+  renderWeeksGrid(container, habit, logs, onToggle, 24);
 }

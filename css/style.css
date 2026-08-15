@@ -298,7 +298,6 @@ input, select, textarea{ font-family: inherit; }
 
 /* ---- semana / mês: navegação ---- */
 .range-nav{ display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; }
-.range-nav-static{ justify-content:flex-start; }
 .range-nav-label{ font-family: var(--font-mono); font-size:12.5px; color: var(--text-dim); text-transform:capitalize; }
 .range-nav-btns{ display:flex; gap:6px; }
 
@@ -327,34 +326,11 @@ input, select, textarea{ font-family: inherit; }
   font-size:9px; padding:1px 4px; line-height:1.3;
 }
 
-/* ---- mês e semestral: mesmo tamanho de quadrado nas duas,
-   travado por uma variável — só a largura total do bloco muda
-   (4 colunas vs 24), com rolagem lateral como rede de segurança
-   em telas bem pequenas. Mesma orientação nas duas: semanas em
-   colunas, dias da semana em linhas (usa .heatmap-body/.heatmap-grid,
-   só o conteúdo de cada célula muda — o Mês mostra o número do dia). ---- */
+/* ---- mês e semestral: mesma grade (.heatmap-body/.heatmap-grid),
+   mesmo tamanho de quadrado, só muda a quantidade de semanas
+   (6 vs 24) — a largura do bloco muda, o tamanho do quadrado não,
+   com rolagem lateral como rede de segurança em telas pequenas. ---- */
 :root{ --grid-cell: clamp(14px, 4vw, 24px); }
-
-.month-cell{
-  width: var(--grid-cell); aspect-ratio: 1; border-radius: 3px; border:1px solid var(--border);
-  background: var(--surface); position:relative; cursor:pointer; overflow:hidden;
-}
-.month-cell:hover{ border-color: var(--text-faint); }
-.month-cell.is-outside{ opacity:.3; pointer-events:none; }
-.month-cell.is-today{ box-shadow: inset 0 0 0 1.5px var(--accent); }
-.month-cell.is-today .month-cell-num{ color: var(--accent); font-weight:700; }
-.month-cell-num{
-  position:absolute; top:2px; left:3px; z-index:2;
-  font-family: var(--font-mono); font-size: clamp(7px, 1.8vw, 10px); color: var(--text-dim);
-}
-.month-stamp{ position:absolute; inset:0; z-index:0; }
-.month-stamp-count{
-  position:absolute; bottom:1px; right:1px; z-index:2;
-  min-width:11px; height:11px; padding:0 2px; border-radius:999px; display:flex; align-items:center; justify-content:center;
-  font-family: var(--font-mono); font-weight:700; line-height:1;
-  font-size: clamp(5.5px, 1.1vw, 7px);
-  box-shadow: 0 0 0 1.5px var(--surface);
-}
 
 /* ---- semestral (heatmap) ---- */
 .heatmap-scroll{ overflow-x:auto; padding-bottom:4px; }

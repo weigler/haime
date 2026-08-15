@@ -217,6 +217,12 @@ prontos neste projeto — só troque se quiser um ícone diferente.
 
 ## Correções recentes
 
+- **Mês por hábito agora com 6 semanas, sem número do dia**: o Mês
+  virou essencialmente o Semestral com uma janela menor (6 semanas
+  em vez de 24) — mesma grade, mesmo estilo, dias futuros desabilitados
+  e esmaecidos (igual à Visão Geral), sem número do dia dentro do
+  quadrado.
+
 - **Semanal da Visão Geral com tamanho diferente**: usava um
   tamanho fixo (18px) independente da variável que Mensal/Semestral
   já usavam corretamente. Unificado — agora as três visões da Visão
