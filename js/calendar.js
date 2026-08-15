@@ -161,11 +161,16 @@ function formatWeekLabel(start){
 // ------------------------------------------------------------
 // Mês — matriz de 4 semanas (4x7 = 28 dias), sempre as mais
 // recentes até hoje. Sem navegação: é uma janela "rolante".
+// Mesma orientação do Semestral/Visão Geral: semanas em colunas,
+// dias da semana em linhas.
 // ------------------------------------------------------------
 export function renderMonth(container, habit, logs, onToggle){
   const currentWeekStart = startOfWeek(new Date());
   const start = addDays(currentWeekStart, -21); // 4 semanas, começando pela mais antiga
-  const days = Array.from({length:28}, (_,i) => addDays(start, i));
+  const weeks = Array.from({length:4}, (_,w) => {
+    const weekStart = addDays(start, w*7);
+    return Array.from({length:7}, (_,i) => addDays(weekStart, i));
+  });
   const tKey = todayKey();
   const today = new Date(); today.setHours(0,0,0,0);
 
@@ -173,54 +178,53 @@ export function renderMonth(container, habit, logs, onToggle){
     <div class="range-nav range-nav-static">
       <span class="range-nav-label">${formatRangeLabel(start, addDays(start, 27))}</span>
     </div>
-    <div class="month-dow-row"></div>
-    <div class="month-grid"></div>
+    <div class="heatmap-body">
+      <div class="heatmap-dows">
+        <span></span><span>Seg</span><span></span><span>Qua</span><span></span><span>Sex</span><span></span>
+      </div>
+      <div class="heatmap-grid" id="month-grid"></div>
+    </div>
   `;
-  const dowRow = container.querySelector(".month-dow-row");
-  DOW_SHORT.forEach(d => {
-    const el = document.createElement("span");
-    el.className = "month-dow";
-    el.textContent = d[0];
-    dowRow.appendChild(el);
-  });
 
-  const grid = container.querySelector(".month-grid");
-  days.forEach(d => {
-    const key = toDateKey(d);
-    const log = logs[key];
-    const filled = !!log && log.value > 0;
-    const future = d > today;
-    const cell = document.createElement("div");
-    cell.className = "month-cell" + (key === tKey ? " is-today" : "") + (future ? " is-outside" : "");
-    let stampHtml = "";
-    let numStyle = "";
-    if(filled){
-      const ink = contrastText(habit.color);
-      numStyle = ` style="color:${ink}"`;
-      if(habit.type === "count"){
-        const intensity = habit.target ? Math.min(1, log.value / habit.target) : 1;
-        stampHtml = `
-          <span class="month-stamp" style="background:${habit.color};opacity:${(0.55+intensity*0.45).toFixed(2)}"></span>
-          <span class="month-stamp-count" style="background:${habit.color};color:${ink}">${log.value}x</span>`;
-      } else {
-        stampHtml = `<span class="month-stamp" style="background:${habit.color}"></span>`;
+  const grid = container.querySelector("#month-grid");
+  weeks.forEach(week => {
+    week.forEach(d => {
+      const key = toDateKey(d);
+      const log = logs[key];
+      const filled = !!log && log.value > 0;
+      const future = d > today;
+      const cell = document.createElement("div");
+      cell.className = "month-cell" + (key === tKey ? " is-today" : "") + (future ? " is-outside" : "");
+      let stampHtml = "";
+      let numStyle = "";
+      if(filled){
+        const ink = contrastText(habit.color);
+        numStyle = ` style="color:${ink}"`;
+        if(habit.type === "count"){
+          const intensity = habit.target ? Math.min(1, log.value / habit.target) : 1;
+          stampHtml = `
+            <span class="month-stamp" style="background:${habit.color};opacity:${(0.55+intensity*0.45).toFixed(2)}"></span>
+            <span class="month-stamp-count" style="background:${habit.color};color:${ink}">${log.value}x</span>`;
+        } else {
+          stampHtml = `<span class="month-stamp" style="background:${habit.color}"></span>`;
+        }
       }
-    }
-    cell.innerHTML = `
-      <span class="month-cell-num"${numStyle}>${d.getDate()}</span>
-      ${stampHtml}
-    `;
-    if(filled && habit.type === "count"){
-      cell.title = `${log.value}${habit.target ? "/"+habit.target : ""}`;
-    }
-    if(!future){
-      if(habit.type === "count"){
-        bindCountTap(cell, () => onToggle(key, log), () => onToggle(key, log, true));
-      } else {
-        cell.addEventListener("click", () => onToggle(key, log));
+      cell.innerHTML = `
+        <span class="month-cell-num"${numStyle}>${d.getDate()}</span>
+        ${stampHtml}
+      `;
+      if(filled && habit.type === "count"){
+        cell.title = `${log.value}${habit.target ? "/"+habit.target : ""}`;
       }
-    }
-    grid.appendChild(cell);
+      if(!future){
+        if(habit.type === "count"){
+          bindCountTap(cell, () => onToggle(key, log), () => onToggle(key, log, true));
+        } else {
+          cell.addEventListener("click", () => onToggle(key, log));
+        }
+      }
+      grid.appendChild(cell);
+    });
   });
 }
 

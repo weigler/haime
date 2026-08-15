@@ -217,6 +217,12 @@ prontos neste projeto — só troque se quiser um ícone diferente.
 
 ## Correções recentes
 
+- **Orientação do Mês por hábito**: estava em formato de calendário
+  tradicional (semanas em linhas, dias da semana em colunas) —
+  invertido em relação ao Semestral e à Visão Geral. Agora segue a
+  mesma orientação dos dois: semanas em colunas, dias da semana em
+  linhas.
+
 - **Círculo em vez de quadrado no Mês por hábito**: achada a causa
   raiz — a célula usava um raio de borda pensado pra elementos
   grandes (cartões, botões), que numa célula de 15-24px vira um

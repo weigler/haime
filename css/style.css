@@ -329,13 +329,12 @@ input, select, textarea{ font-family: inherit; }
 
 /* ---- mês e semestral: mesmo tamanho de quadrado nas duas,
    travado por uma variável — só a largura total do bloco muda
-   (7 colunas vs 24), com rolagem lateral como rede de segurança
-   em telas bem pequenas ---- */
+   (4 colunas vs 24), com rolagem lateral como rede de segurança
+   em telas bem pequenas. Mesma orientação nas duas: semanas em
+   colunas, dias da semana em linhas (usa .heatmap-body/.heatmap-grid,
+   só o conteúdo de cada célula muda — o Mês mostra o número do dia). ---- */
 :root{ --grid-cell: clamp(14px, 4vw, 24px); }
 
-.month-dow-row{ display:grid; grid-template-columns: repeat(7, var(--grid-cell)); gap:6px; margin-bottom:6px; width:fit-content; }
-.month-grid{ display:grid; grid-template-columns: repeat(7, var(--grid-cell)); gap:6px; width:fit-content; }
-.month-dow{ font-size:10px; color: var(--text-faint); text-align:center; text-transform:uppercase; padding-bottom:4px; font-weight:600; overflow:hidden; }
 .month-cell{
   width: var(--grid-cell); aspect-ratio: 1; border-radius: 3px; border:1px solid var(--border);
   background: var(--surface); position:relative; cursor:pointer; overflow:hidden;
