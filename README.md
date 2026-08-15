@@ -217,6 +217,15 @@ prontos neste projeto — só troque se quiser um ícone diferente.
 
 ## Correções recentes
 
+- **Semanal da Visão Geral com tamanho diferente**: usava um
+  tamanho fixo (18px) independente da variável que Mensal/Semestral
+  já usavam corretamente. Unificado — agora as três visões da Visão
+  Geral têm quadrados do mesmo tamanho, e crescem/encolhem juntas
+  conforme a largura da tela.
+- **Mês vs Semestral por hábito**: medi e confirmei que já estavam
+  exatamente do mesmo tamanho (0px de diferença) desde a correção
+  anterior da orientação.
+
 - **Orientação do Mês por hábito**: estava em formato de calendário
   tradicional (semanas em linhas, dias da semana em colunas) —
   invertido em relação ao Semestral e à Visão Geral. Agora segue a
