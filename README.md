@@ -217,6 +217,21 @@ prontos neste projeto — só troque se quiser um ícone diferente.
 
 ## Correções recentes
 
+- **Círculo em vez de quadrado no Mês por hábito**: achada a causa
+  raiz — a célula usava um raio de borda pensado pra elementos
+  grandes (cartões, botões), que numa célula de 15-24px vira um
+  círculo. Igualado ao raio pequeno que o Semestral/Visão Geral já
+  usavam corretamente.
+- **Rótulos das abas unificados**: "Semanal", "Mensal" e "Semestral"
+  em todo lugar agora — por hábito e na Visão Geral usavam nomes
+  diferentes ("Semana"/"Mês" vs "Semanal"/"Mensal").
+- **Foto de perfil cortando as laterais**: a causa real — o recorte
+  sempre abria já cortando os lados (modo "cobrir", que corta
+  qualquer foto mais larga que alta — a maioria), e o zoom só ia
+  pra cima (100% a 300%), sem opção de diminuir pra ver a foto
+  inteira. Agora abre mostrando a foto inteira por padrão, e dá pra
+  diminuir o zoom até 25% se precisar.
+
 - **Número do dia sumindo no Mês por hábito**: o selo de contagem
   ("2x") tinha ficado grande demais e cobria o número do dia por
   cima — em telas maiores (PC), não só no celular. Redesenhado: o

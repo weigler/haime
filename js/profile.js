@@ -146,10 +146,15 @@ async function openCropModal(file){
   const coverScale = CANVAS_SIZE / Math.min(iw, ih);
   baseDrawW = iw * coverScale;
   baseDrawH = ih * coverScale;
-  zoom = 1;
+  // começa mostrando a foto INTEIRA (sem cortar as laterais), em vez de já
+  // abrir no modo "cover" (que corta os lados em qualquer foto mais larga
+  // que alta — a maioria). A pessoa aumenta o zoom depois se quiser um
+  // enquadramento mais fechado.
+  const fitPct = Math.round((Math.min(iw, ih) / Math.max(iw, ih)) * 100);
+  zoom = Math.max(25, Math.min(100, fitPct)) / 100;
   panX = 0;
   panY = 0;
-  zoomInput.value = 100;
+  zoomInput.value = Math.round(zoom * 100);
   redrawCrop();
   cropModal.classList.remove("is-hidden");
 }

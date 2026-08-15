@@ -337,7 +337,7 @@ input, select, textarea{ font-family: inherit; }
 .month-grid{ display:grid; grid-template-columns: repeat(7, var(--grid-cell)); gap:6px; width:fit-content; }
 .month-dow{ font-size:10px; color: var(--text-faint); text-align:center; text-transform:uppercase; padding-bottom:4px; font-weight:600; overflow:hidden; }
 .month-cell{
-  width: var(--grid-cell); aspect-ratio: 1; border-radius: var(--radius-m); border:1px solid var(--border);
+  width: var(--grid-cell); aspect-ratio: 1; border-radius: 3px; border:1px solid var(--border);
   background: var(--surface); position:relative; cursor:pointer; overflow:hidden;
 }
 .month-cell:hover{ border-color: var(--text-faint); }
